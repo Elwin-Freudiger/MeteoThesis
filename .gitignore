@@ -1,0 +1,7 @@
+data/raw/
+
+my_env/
+
+.env
+
+tests/
