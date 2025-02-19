@@ -20,7 +20,7 @@ def extract_station_data(file_path):
             continue
         
         if station_section:
-            match = re.match(r"^(\S+)\s+(.+?)\s+rre150z0.+?(\d+)\.\d+'/\d+\.\d+'\s+(\d+)/(\d+)\s+(\d+)", line)
+            match = re.match(r"^(\w+)\s+(.+)\s{2,}rre150z0.+\d+.\d+'/\d+.\d+'\s+(\d+)/(\d+)\s+(\d+)", line)
 
             if match:
                 station_code = match.group(1).strip()
@@ -79,7 +79,7 @@ def process_data_files(pattern='data/raw/weather_stations/*_data.txt', output_fi
 
 def main():
     process_legend_files()
-    process_data_files()
+    #process_data_files()
 
 
 
