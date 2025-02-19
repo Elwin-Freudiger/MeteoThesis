@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DATA_DIR = "data/raw"
-MAX_CONCURRENT_DOWNLOADS = 2
+MAX_CONCURRENT_DOWNLOADS = 5
 
 ios.makedirs(DATA_DIR, exist_ok=True)
 
@@ -28,6 +28,11 @@ class OpenDataAPI:
 
 async def download_file(session, file_url, filename):
     file_path = os.path.join(DATA_DIR, filename)
+    
+    if os.path.exists(file_path):
+        logger.info(f"File {filename} already exists, skipping download.")
+        return True
+    
     try:
         async with session.get(file_url) as response:
             if response.status != 200:
@@ -48,6 +53,11 @@ async def download_files(api, dataset_name, dataset_version, file_list):
     async with aiohttp.ClientSession(connector=connector) as session:
         tasks = []
         for filename in file_list:
+            file_path = os.path.join(DATA_DIR, filename)
+            if os.path.exists(file_path):
+                logger.info(f"File {filename} already exists, skipping download.")
+                continue
+            
             response = await api.get_file_url(session, dataset_name, dataset_version, filename)
             if "temporaryDownloadUrl" in response:
                 file_url = response["temporaryDownloadUrl"]
@@ -62,7 +72,7 @@ async def main():
     load_dotenv()
     api_key = os.getenv("API_KEY")
     dataset_name = "RAD_OPERA_HOURLY_RAINFALL_ACCUMULATION_EURADCLIM"
-    dataset_version = "2.0"
+    dataset_version = "2"
     
     api = OpenDataAPI(api_token=api_key)
     
