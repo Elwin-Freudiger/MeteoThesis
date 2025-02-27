@@ -2,6 +2,7 @@ import glob
 import pandas as pd
 import os
 import re
+from tqdm import tqdm
 
 #return a list of files matching the pattern
 def get_text_files(pattern):
@@ -46,11 +47,9 @@ def process_legend_files(pattern="data/raw/weather_stations/*_legend.txt", outpu
 
 
 #read the csv of one file
-def get_df(filepath):
+def get_df(filepath, varname):
     df = pd.read_csv(filepath,
                     delimiter=';',
-                    skiprows=2,
-                    header=0,
                     dtype=str,
                     encoding='utf-8',
                     na_values=['-'])
@@ -60,26 +59,30 @@ def get_df(filepath):
     #convert to correct type
     df['stn'] = df['stn'].astype(str)
     df['time'] = df['time'].astype(str)
-    df['rre150z0'] = pd.to_numeric(df['rre150z0'], errors='coerce')
+    df.iloc[:, 2] = pd.to_numeric(df.iloc[:, 2], errors='coerce')
 
-    df = df.rename(columns={'stn':'station', 'rre150z0': 'precip'})
+    df = df.rename(columns={'stn':'station', df.columns[2]: varname})
 
     return df
 
 
-def process_data_files(pattern='data/raw/weather_stations/*_data.txt', output_file = "data/clean/station_precipitation.csv"):
+def process_data_files(varname):
+    pattern = f"data/raw/weather_stations/{varname}/*_data.txt"
     files = get_text_files(pattern)
     all_data = pd.DataFrame()
 
-    for file_path in files:
-        all_data = pd.concat([all_data, get_df(file_path)], ignore_index=False)
-    
+    for file_path in tqdm(files, desc=f"Processing {varname}"):
+        all_data = pd.concat([all_data, get_df(file_path, varname)], ignore_index=False)
+    output_file = f"data/clean/{varname}.csv"
     all_data.to_csv(output_file, index=False)
+    print(f"{varname} finished")
 
 
 def main():
-    process_legend_files()
-    #process_data_files()
+    varlist = ["wind/direction", "wind/speed"]
+    for var in varlist:
+        process_data_files(var)
+    #process_legend_files()
 
 
 
