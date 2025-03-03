@@ -1,5 +1,7 @@
 data/
 
+.venv/
+
 my_env/
 
 .env

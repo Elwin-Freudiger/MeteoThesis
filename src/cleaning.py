@@ -79,7 +79,7 @@ def process_data_files(varname):
 
 
 def main():
-    varlist = ["wind/direction", "wind/speed"]
+    varlist = ["pression", "temperature", "wind_direction", "wind_speed"]
     for var in varlist:
         process_data_files(var)
     #process_legend_files()
