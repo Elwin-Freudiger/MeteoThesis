@@ -1,9 +1,16 @@
+#too big
 data/
 
+#virtual env
 .venv/
-
 my_env/
 
+#keep API keys safe
 .env
 
+#test dir
 tests/
+
+zzz_kan_testing/
+
+neuralforecast/

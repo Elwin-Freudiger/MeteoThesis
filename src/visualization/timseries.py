@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    df = pd.read_csv("data/clean/station_precipitation.csv")
+    df = pd.read_csv("data/filtered/pression_filter.csv")
     df = df[df['station']=="TAE"]
     
-    plt.plot(df[['precip']])
-    plt.savefig("report/figures/timeserie.png")
+    plt.plot(df[['pression']])
+    plt.show()
+    plt.savefig("report/figures/pression_ts.png")
 
 
 if __name__ == "__main__":
