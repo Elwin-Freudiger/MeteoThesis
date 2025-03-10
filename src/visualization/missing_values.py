@@ -154,7 +154,50 @@ def missing_count_table():
 
     print(latex_table)
 
-def missing
+def missing_by_station():
+    miss_df = pd.read_csv('data/combined_missing_data.csv')
+
+    total_missing_periods = len(miss_df)
+
+    cutoffs = [6, 72, 144, 1008]
+
+    name = None
+
+    for cutoff in cutoffs:
+        #filter dataset
+        filtered_df = miss_df[miss_df['missing_duration'] <= cutoff]
+
+        match cutoff:
+            case 6:
+                name = "an hour"
+            case 72:
+                name = "12 hours"
+            case 144:
+                name = "a day"
+            case 1008:
+                name = "a week"
+
+        filtered_df = miss_df[['station']].value_counts(dropna=False).reset_index()
+        filtered_df.columns = ['station', 'missing_count']
+
+        #create plot
+        fig, ax = plt.subplots(figsize=(14,8))
+        ax.bar(filtered_df['station'], filtered_df['missing_count'],
+                color='darkblue',
+                edgecolor='black')
+        
+        #setting titles and labels
+        ax.set_title(f'Missing periods smaller than {name}')
+        ax.set_xlabel('Stations')
+        ax.tick_params(axis='x', labelrotation=90, labelsize=5)
+        ax.set_ylabel('Frequency')
+
+        #output graph
+        plt.tight_layout()
+        plt.savefig(f"report/figures/missing/missing_station_{cutoff*10}min.pdf")
+        plt.show()
+
+
 
 
 def main():
@@ -163,6 +206,7 @@ def main():
     #categorical_hist()
     #missing_count()
     #missing_count_table()
+    missing_by_station()
 
 if __name__ == "__main__":
     main()
