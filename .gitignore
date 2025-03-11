@@ -11,6 +11,5 @@ my_env/
 #test dir
 tests/
 
-zzz_kan_testing/
-
+#Neural forecast package
 neuralforecast/

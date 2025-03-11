@@ -12,16 +12,16 @@ file = 'data/filtered/stations.csv'
 df_stations = pd.read_csv(file)
 
 # Read temperature file
-df_temp = pd.read_csv('data/filtered/temperature_filter.csv')
+df_temp = pd.read_csv('data/filtered/precipitation_filter.csv')
 
 # Convert time and filter data
 df_temp['time'] = pd.to_datetime(df_temp['time'], format='%Y%m%d%H%M')
-df_temp = df_temp[(df_temp['time'] >= '2021-04-22') & (df_temp['time'] < '2021-04-23')]
+df_temp = df_temp[(df_temp['time'] >= '2022-08-26') & (df_temp['time'] < '2022-08-27')]
 
 # Define CRS and temperature range
 crs_2056 = "EPSG:2056"
-min_val = df_temp['temperature'].min()
-max_val = df_temp['temperature'].max()
+min_val = df_temp['precipitation'].min()
+max_val = df_temp['precipitation'].max()
 
 # Prepare frames for GIF
 frames = []
@@ -40,8 +40,8 @@ for timestamp in df_temp['time'].unique():
     fig, ax = plt.subplots(figsize=(10, 10))
     gdf_points.plot(
         ax=ax,
-        column='temperature',
-        cmap='coolwarm',
+        column='precipitation',
+        cmap='Blues',
         vmin=min_val,
         vmax=max_val,
         edgecolor='black',
@@ -60,7 +60,7 @@ for timestamp in df_temp['time'].unique():
     plt.axis('off')
 
     # Format title with a cleaner timestamp
-    plt.title(f"Temperature in Switzerland on {timestamp.strftime('%Y-%m-%d %H:%M')}")
+    plt.title(f"Precipitation levels in Switzerland on {timestamp.strftime('%Y-%m-%d %H:%M')}")
 
     # Save plot to in-memory buffer
     buf = io.BytesIO()
@@ -71,4 +71,4 @@ for timestamp in df_temp['time'].unique():
     plt.close(fig)
 
 # Save all frames as a GIF
-frames[0].save('report/figures/gifs/temperature_animation_nomiss.gif', save_all=True, append_images=frames[1:], duration=100, loop=0)
+frames[0].save('report/figures/gifs/precipitation_animation.gif', save_all=True, append_images=frames[1:], duration=100, loop=0)
