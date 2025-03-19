@@ -12,4 +12,4 @@ my_env/
 tests/
 
 #Neural forecast package
-neuralforecast/
+neuralforecast/.venv

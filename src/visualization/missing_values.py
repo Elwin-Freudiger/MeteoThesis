@@ -1,4 +1,9 @@
 import pandas as pd
+import seaborn as sns
+import geopandas as gpd
+from shapely.geometry import Point
+import contextily as ctx
+import xyzservices.providers as xyz
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -78,13 +83,9 @@ def categorical_hist():
     miss_df = pd.read_csv('data/combined_missing_data.csv')
     missing_durations = miss_df['missing_duration']
 
-    bins = [0, 1, 6, 12, 24, 168, float("inf")]
-    labels = ["<1h", "1-6h", "6-12h", "12-24h", "1-7d", ">7d"]
-
-    durations_reshaped = pd.DataFrame(missing_durations).values.reshape(-1, 1)
-
-    discretizer = KBinsDiscretizer(n_bins=len(bins)-1, encode='ordinal', strategy='uniform')
-    binned = discretizer.fit_transform(durations_reshaped).flatten()
+    # Define bins and labels
+    bins = [0, 6, 72, 144, 1008, float("inf")]
+    labels = ["<1h", "1-12h", "12h-24h", "1d-7d", ">7d"]
 
     binned_labels = pd.cut(missing_durations, bins=bins, labels=labels)
 
@@ -116,17 +117,14 @@ def missing_count():
     #create plot
     fig, ax = plt.subplots(figsize=(8,6))
 
-    ax.hist(merged_df['missing_count'],
-            bins=10,
-            color='darkblue',
-            edgecolor='black')
+    sns.kdeplot(merged_df['missing_count'], ax=ax, color='darkblue', fill=True)
     
     ax.set_title('Distribution of missing period count')
     ax.set_xlabel('Number of missing periods')
     ax.set_ylabel('Frequency')
 
     plt.tight_layout()
-    plt.savefig('report/figures/missing/missing_count_hist.pdf')
+    plt.savefig('report/figures/missing/missing_count_density.pdf')
     plt.show()
 
 def missing_count_table():
@@ -157,56 +155,80 @@ def missing_count_table():
 def missing_by_station():
     miss_df = pd.read_csv('data/combined_missing_data.csv')
 
-    total_missing_periods = len(miss_df)
+    bins = [0, 6, 72, 144, 1008, float("inf")]
+    labels = ["<1h", "1-12h"]
 
-    cutoffs = [6, 72, 144, 1008]
+    binned_labels = pd.cut(miss_df["missing_duration"], bins=bins, labels=labels)
 
-    name = None
+    category_counts = pd.Series(binned_labels).value_counts().reindex(labels, fill_value=0)
 
-    for cutoff in cutoffs:
-        #filter dataset
-        filtered_df = miss_df[miss_df['missing_duration'] <= cutoff]
 
-        match cutoff:
-            case 6:
-                name = "an hour"
-            case 72:
-                name = "12 hours"
-            case 144:
-                name = "a day"
-            case 1008:
-                name = "a week"
+    filtered_df = miss_df[['station']].value_counts(dropna=False).reset_index()
+    filtered_df.columns = ['station', 'missing_count']
 
-        filtered_df = miss_df[['station']].value_counts(dropna=False).reset_index()
-        filtered_df.columns = ['station', 'missing_count']
+    #create plot
+    fig, ax = plt.subplots(figsize=(14,8))
+    ax.bar(filtered_df['station'], filtered_df['missing_count'],
+            color='darkblue',
+            edgecolor='black')
+    
+    #setting titles and labels
+    ax.set_title(f'Missing periods smaller than {name}')
+    ax.set_xlabel('Stations')
+    ax.tick_params(axis='x', labelrotation=90, labelsize=5)
+    ax.set_ylabel('Frequency')
 
-        #create plot
-        fig, ax = plt.subplots(figsize=(14,8))
-        ax.bar(filtered_df['station'], filtered_df['missing_count'],
-                color='darkblue',
-                edgecolor='black')
+    #output graph
+    plt.tight_layout()
+    plt.savefig(f"report/figures/missing/missing_station_{cutoff*10}min.pdf")
+    plt.show()
+
+def missing_intervals_table():
+    # Read missing data
+    miss_df = pd.read_csv('data/combined_missing_data.csv')
+
+    # Define bins and labels
+    bins = [0, 6, 72, 144, 1008, float("inf")]
+    labels = ["<1h", "1-12h", "12h-24h", "1d-7d", ">7d"]
+
+    # Bin the missing durations
+    miss_df["duration_category"] = pd.cut(miss_df["missing_duration"], bins=bins, labels=labels, right=False)
+
+    # Count occurrences per station for each interval
+    grouped = miss_df.groupby(["station", "duration_category"]).size().reset_index(name="missing_count")
+
+    for label in labels:
+
+        #print a table
+        subset = grouped[grouped["duration_category"] == label]
+
+        if subset.empty:
+            continue
+
+        # Group by missing count and aggregate stations into a single string
+        summary = subset.groupby("missing_count")["station"].apply(lambda x: ", ".join(sorted(x))).reset_index()
+
+        # Convert to LaTeX
+        latex_table = summary.to_latex(index=False, 
+                                       caption=f"Stations with Missing Periods in {label}", 
+                                       label=f"tab:missing_{label.replace(' ', '_')}", 
+                                       column_format="|r|l|", 
+                                       escape=False)
         
-        #setting titles and labels
-        ax.set_title(f'Missing periods smaller than {name}')
-        ax.set_xlabel('Stations')
-        ax.tick_params(axis='x', labelrotation=90, labelsize=5)
-        ax.set_ylabel('Frequency')
-
-        #output graph
-        plt.tight_layout()
-        plt.savefig(f"report/figures/missing/missing_station_{cutoff*10}min.pdf")
-        plt.show()
-
+        print(f"\nLaTeX Table for {label}:")
+        print(latex_table)
 
 
 
 def main():
     #para_lol()
     #duration_hist()
-    #categorical_hist()
+    categorical_hist()
     #missing_count()
     #missing_count_table()
-    missing_by_station()
+    #missing_by_station()
+    #missing_intervals_table()
+
 
 if __name__ == "__main__":
     main()
