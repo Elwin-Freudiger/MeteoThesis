@@ -10,7 +10,8 @@ from neuralforecast.losses.pytorch import DistributionLoss
 #Load the data
 valais_dataset = pd.read_csv('../data/clean/valais_imputed.csv')
 valais_small = valais_dataset[['station', 'time', 'precip']]
-valais_small['ds'] = pd.to_datetime(valais_small['time'], format='%Y%m%d%H%M')
+valais_small = valais_small[valais_small['station']=='VSNEN'].copy()
+valais_small['ds'] = pd.to_datetime(valais_small['time'], format='%Y%m%d%H%M').copy()
 valais_small = valais_small.drop(columns=['time'])
 valais_small = valais_small.rename(columns={'precip': 'y', 'station':'unique_id'})
 
@@ -26,7 +27,7 @@ fcst = NeuralForecast(
     models=[
             KAN(h=72,
                 input_size=144,
-                loss = DistributionLoss(distribution="Normal"),
+                loss = DistributionLoss(distribution="Poisson"),
                 max_steps=100,
                 scaler_type='standard',
                 futr_exog_list=None,
@@ -41,12 +42,12 @@ forecasts = fcst.predict(futr_df=Y_test_df)
 
 # Prepare plot data
 Y_hat_df = forecasts.reset_index(drop=False)
-plot_df = pd.concat([Y_train_df, Y_test_df], axis=1)
+plot_df = pd.concat([Y_train_df.iloc[-6912:], Y_test_df.iloc[:144]], axis=1)
 
 # Plot predictions
 fig, ax = plt.subplots(1, 1, figsize=(20, 7))
-plt.plot(plot_df['ds'], plot_df['precip'], c='black', label='True')
-plt.plot(Y_hat_df['ds'], Y_hat_df['KAN-median'], c='blue', label='Predicted')
+plt.plot(plot_df['ds'], plot_df['y'], c='black', label='True')
+plt.plot(Y_hat_df['ds'], Y_hat_df['KAN'], c='blue', label='Predicted', alpha=0.5)
 ax.set_title('Rainfall Forecast', fontsize=22)
 ax.set_ylabel('Rainfall (mm)', fontsize=20)
 ax.set_xlabel('Time', fontsize=20)
