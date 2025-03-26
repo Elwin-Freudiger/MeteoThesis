@@ -5,6 +5,9 @@ data/
 .venv/
 my_env/
 
+#.vscode settings ignore
+.vscode
+
 #keep API keys safe
 .env
 
