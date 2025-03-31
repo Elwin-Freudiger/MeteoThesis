@@ -9,44 +9,48 @@ import seaborn as sns
 import numpy as np
 from functools import reduce
 from scipy.spatial.distance import pdist, squareform
+from statsmodels.tsa.seasonal import STL
 
 
-precip = pd.read_csv("data/filtered/precipitation_filter.csv")
+#precip = pd.read_csv("data/filtered/precipitation_filter.csv")
 #moisture = pd.read_csv("data/filtered/moisture_filter.csv")
 #pression = pd.read_csv("data/filtered/pression_filter.csv")
 #temperature = pd.read_csv("data/filtered/temperature_filter.csv")
 #wind = pd.read_csv("data/filtered/wind_vectors_filter.csv")
 
-def all_ts(station='PUY'):
+everything = pd.read_csv('data/filtered/merged_valais.csv')
+
+def all_ts(station='SIO'):
     # Filter data for the given station
-    precip_filtered = precip[precip['station'] == station]
-    moisture_filtered = moisture[moisture['station'] == station]
-    pression_filtered = pression[pression['station'] == station]
-    temperature_filtered = temperature[temperature['station'] == station]
-    wind_filtered = wind[wind['station'] == station]
+    sion_data = everything[everything['station'] == station].copy()
 
     # Compute wind speed
-    wind_filtered['speed'] = np.sqrt(wind_filtered['North']**2 + wind_filtered['East']**2)
+    sion_data['speed'] = np.sqrt(sion_data['North']**2 + sion_data['East']**2)
+    sion_data['time'] = pd.to_datetime(sion_data['time'], format='%Y%m%d%H%M')
+    sion_data = sion_data.set_index('time')
+
+    # Compute monthly averages
+    monthly_avg = sion_data[['precip', 'speed', 'moisture', 'pression', 'temperature']].resample('ME').mean()
 
     # Create figure with shared x-axis
-    fig, axes = plt.subplots(5, 1, figsize=(10, 12), sharex=True)
+    fig, axes = plt.subplots(5, 1, figsize=(10, 10), sharex=True)
 
-    # Define variable names and datasets
-    datasets = [precip_filtered, moisture_filtered, pression_filtered, temperature_filtered, wind_filtered]
-    labels = ["precipitation", "moisture", "pression", "temperature", "speed"]
+    vars=['precip', 'speed', 'moisture', 'pression', 'temperature']
+    labels=['Precipitation', 'Wind Speed', 'Moisture', 'Pressure', 'Temperature']
 
-    time = pd.date_range(start='2019-01-01 00:00', end='2023-12-31 23:50', freq='10min')
-
-    for i, (data, label) in enumerate(zip(datasets, labels)):
-        axes[i].plot(time, data.loc[:, label], label=label)  # Assuming the third column is the relevant variable
-        axes[i].set_ylabel(label)
-        axes[i].legend()
+    for i, (ax, var, label) in enumerate(zip(axes, vars, labels)):
+        ax.plot(sion_data.index, sion_data[var], label=label, alpha=0.5)
+        ax.plot(monthly_avg.index, monthly_avg[var], label="monthly average", color='red')
+        ax.set_ylabel(label, fontsize=10)
+        ax.legend(loc='upper right')
+        ax.grid(True, linestyle="--", alpha=0.5)
 
     axes[-1].set_xlabel("Time")
+    plt.title('Timeseries of available variables with monthly averages', fontsize=13)
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
-    plt.savefig('report/figures/all_vars_ts.pdf')
+    plt.savefig('report/figures/all_vars_sion.pdf', dpi=100)
 
 #plotting the temperature for each station
 def all_stations_ts():
@@ -78,8 +82,7 @@ def all_stations_ts():
     plt.tight_layout()
     plt.savefig("report/figures/lausanne_stations_ts.pdf")
     plt.show()
-
-    
+  
 def monthly_vd_ts():
     vaud_stations = ["LSN","PUY", "VEV", "COS", "AVA"]
     station_name = ["Lausanne", "Pully", "Vevey", "Cossonay", "Les Avants"]
@@ -105,8 +108,7 @@ def monthly_vd_ts():
     plt.tight_layout()
     plt.savefig("report/figures/monthly_lausanne_ts.pdf")
     plt.show()
-
-    
+   
 def cumsum_vd_ts():
     vaud_stations = ["LSN","PUY", "VEV", "COS", "AVA"]
     station_name = ["Lausanne", "Pully", "Vevey", "Cossonay", "Les Avants"]
@@ -132,7 +134,6 @@ def cumsum_vd_ts():
     plt.tight_layout()
     plt.savefig("report/figures/cumsum_vd_ts.pdf")
     plt.show()
-
 
 def cumsum_periods(station='PUY'):
     precip_filter = precip[precip['station']==station]
@@ -219,7 +220,6 @@ def temp_overlap(station='PUY'):
     # Save the plot to a file
     #plt.savefig(f"report/figures/monthly_temp_pully.pdf")
 
-#Correlation graph with every variable
 def correlation(station='PUY'):
     precip = pd.read_csv("data/filtered/precipitation_filter.csv")
     moisture = pd.read_csv("data/filtered/moisture_filter.csv")
@@ -338,10 +338,8 @@ def altitude_precip():
     plt.savefig("report/figures/sum_precip_altitude.pdf")
     plt.show()
 
-    
-
 def main():
-    station_correlation()
+    all_ts()
 
 
 if __name__ == '__main__':

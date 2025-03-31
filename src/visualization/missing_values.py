@@ -81,6 +81,8 @@ def duration_hist():
 
 def categorical_hist():
     miss_df = pd.read_csv('data/combined_missing_data.csv')
+    station_list = pd.read_csv('data/clean/valais_stations.csv')
+    miss_df = miss_df[miss_df['station'].isin(station_list['station'])]
     missing_durations = miss_df['missing_duration']
 
     # Define bins and labels
@@ -97,17 +99,17 @@ def categorical_hist():
            color='darkblue',
            edgecolor='black')
     
-    ax.set_title('Distribution of missing periods')
-    ax.set_xlabel('Duration (hours)')
-    ax.set_ylabel('Frequency')
+    ax.set_title('Distribution of missing periods', fontsize=13)
+    ax.set_xlabel('Duration (hours)', fontsize=13)
+    ax.set_ylabel('Frequency', fontsize=13)
 
     plt.tight_layout()
-    plt.savefig('report/figures/missing/categorical_missing_duration.pdf')
+    plt.savefig('report/figures/missing/valais_only/categorical_missing_duration.pdf')
     plt.show()
 
 def missing_count():
     miss_df = pd.read_csv('data/combined_missing_data.csv')
-    station_list = pd.read_csv('data/filtered/stations.csv')
+    station_list = pd.read_csv('data/clean/valais_stations.csv')
 
     station_count = miss_df[['station']].value_counts(dropna=False).reset_index()
     station_count.columns = ['station', 'missing_count']
@@ -117,14 +119,14 @@ def missing_count():
     #create plot
     fig, ax = plt.subplots(figsize=(8,6))
 
-    sns.kdeplot(merged_df['missing_count'], ax=ax, color='darkblue', fill=True)
+    ax.hist(merged_df['missing_count'],bins=250, color='darkblue')
     
-    ax.set_title('Distribution of missing period count')
-    ax.set_xlabel('Number of missing periods')
-    ax.set_ylabel('Frequency')
+    ax.set_title('Distribution of missing period count for stations in Valais', fontsize=13)
+    ax.set_xlabel('Number of missing periods', fontsize=13)
+    ax.set_ylabel('Frequency', fontsize=13)
 
     plt.tight_layout()
-    plt.savefig('report/figures/missing/missing_count_density.pdf')
+    plt.savefig('report/figures/missing/valais_only/missing_count_bars.pdf')
     plt.show()
 
 def missing_count_table():
@@ -221,13 +223,7 @@ def missing_intervals_table():
 
 
 def main():
-    #para_lol()
-    #duration_hist()
     categorical_hist()
-    #missing_count()
-    #missing_count_table()
-    #missing_by_station()
-    #missing_intervals_table()
 
 
 if __name__ == "__main__":
