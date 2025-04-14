@@ -1,0 +1,184 @@
+### Literature Review: Forecasting Rainfall Using Kolmogorov Arnold Networks in the Valais Region
+
+### Introduction to Weather Forecasting
+
+Weather forecasting has evolved significantly over the years and has become vital for sectors such as agriculture, transportation, and energy management. The importance of weather forecasting has increased manifold in recent decades as it facilitates informed daily decisions and helps avoid probable weather uncertainty. Weather forecasting is a challenging profession due to the uncertainty levels associated with various seen and unseen parameters. Modern weather prediction approaches have evolved to include model-based forecasts derived from multiple sources of past data, observations, and information. Despite significant advancements, weather forecasting remains a scientifically and technologically challenging problem worldwide. It is fundamentally a probabilistic problem by nature, though the deterministic approach has historically dominated the field.
+
+A gradual shift towards more probabilistic methods has occurred over the last decade, with meteorological data assimilation, ensemble forecasting, and post-processing of model output increasingly influenced by statistical and control theory concepts. This transition reflects the growing recognition of weather systems' inherent uncertainty and the need for more nuanced prediction methods. The emergence of machine learning methods in weather forecasting has demonstrated exceptional capability in handling complex, high-dimensional datasets and leveraging large volumes of historical and real-time data. These advanced approaches enable the identification of subtle patterns and relationships among weather variables that traditional methods might miss.
+
+### Machine Learning in Weather Forecasting
+
+Machine learning techniques have gained significant importance in forecasting due to their adaptive and flexible approaches. Artificial Neural Networks (ANNs) in particular have led to many weather forecasting techniques with promising results. Current research actively focuses on specific forecasting tasks such as global weather prediction, downscaling, extreme weather events, and integrating machine learning methods with physical principles. Despite these advances, several challenges remain unresolved, including model interpretability and accurately predicting rare weather events.
+
+Data mining techniques have proven valuable for forecasting meteorological variables including maximum temperature, rainfall, evaporation, and wind speed. Research has investigated various algorithms such as artificial decision trees, naive Bayes, random forest, and K-nearest neighbors for weather forecasting. These data mining approaches show that given sufficient case data, they can be effectively applied to weather forecasting and climate change studies. The application of combined or hybrid methods often yields improved results compared to traditional approaches, as demonstrated in studies where combined models significantly enhanced rainfall prediction accuracy.
+
+### Multi-Layer Perceptrons in Time Series Forecasting
+
+Multilayer Perceptrons (MLPs) represent a powerful approach for time series forecasting due to their ability to model complex relationships in temporal data. MLPs have been applied to predict various atmospheric parameters, including air temperature and pressure. Their architecture typically consists of a supervised feed-forward neural network with multiple hidden nodes. Despite their potential, implementation results often show considerable variance in performance metrics, with large risk function values (standard deviation of MSE) reported in some studies.
+
+MLPs stand out due to their exceptional advantage of universally approximating almost any function. This characteristic makes them particularly valuable for modeling non-linear relationships in time series data. Additionally, MLPs can exploit cross-series information to enhance individual forecasts, providing an advantage in complex forecasting scenarios. Research has shown that MLPs can produce accurate forecasts for various time series despite their relative simplicity compared to more complex neural network architectures.
+
+However, MLPs face several limitations in terms of data and computational requirements. They require significant amounts of data for training and can be computationally intensive. Studies suggest that MLPs may have difficulties extrapolating time series with trend components, potentially limiting their effectiveness in certain forecasting applications. Furthermore, research on seasonal time series has highlighted the sensitivity of MLPs to different architectural choices, including the combination of hidden nodes, input nodes, and activation functions.
+
+### MLPs in Weather and Rainfall Prediction
+
+In meteorological applications, MLPs have been employed specifically for precipitation forecasting. For instance, research in Bulgaria used multiple MLPs to determine whether forecasted precipitation would exceed operational criteria for heavy-snow and heavy-rain warnings. These models were trained on variables extracted from numerical weather prediction models, focusing on more predictable parameters like temperature and wind rather than direct precipitation amounts. The MLPs demonstrated better performance during cool seasons, with 75% correct classifications compared to 65% in warm seasons.
+
+For rainfall prediction specifically, the conventional methods typically use linear interpolation approaches. However, as the resolution of observational data improves, the influence of underlying surface changes and high terrain gradients becomes more significant. This complexity has spurred the development of hybrid approaches that combine deep learning with traditional methods. Such hybrid models have shown improved performance in interpolating meteorological data in complex terrain areas.
+
+Research on rainfall prediction has highlighted the challenges of using a single algorithm type, as this often fails to produce sufficiently accurate results. Consequently, hybrid approaches have been developed, such as combining clustering (K-Medoids) with classifier algorithms (Naïve-Bayes) to improve prediction accuracy. These hybrid methods have demonstrated advantages over more complex approaches like Support Vector Machines and Random Forests in terms of accuracy, speed, and execution time.
+
+### Spatial Interpolation Using Kriging
+
+Kriging is a geostatistical method widely used for spatial interpolation of meteorological data. It provides optimal estimates at unsampled locations based on spatial correlations among observed data points. Universal Kriging, in particular, has been applied to spatially interpolate meteorological variables including temperature, relative humidity, and precipitation in various regions. This approach is especially valuable in applications where limited observational data is available.
+
+The ordinary Kriging and universal Kriging methods have been compared for spatial interpolation of annual precipitation data, with results indicating that the two methods produce similar outcomes. Interestingly, ordinary Kriging sometimes demonstrates slightly higher precision. This suggests that ordinary Kriging can effectively replace universal Kriging for spatial interpolation of nonstationary variables when investigating spatial variability is not essential. Without the need to determine drifts, ordinary Kriging offers simpler calculations while still providing satisfactory interpolation results.
+
+For precipitation interpolation specifically, Kriging with external drift (KED) considers the effect of elevations. The method comprehensively accounts for complex relationships between grid points and observational sites in terms of locations, horizontal distances, and elevations. KED can effectively eliminate errors introduced by large geographic differences and smoothing processes. Compared to ordinary Kriging, the PER-Kriging method (a form of KED) can reduce mean interpolation errors significantly, with relative errors less than 12% across different curve fitting approaches.
+
+### The GSTools Python Library for Kriging
+
+The Python GSTools library serves as a comprehensive toolkit for implementing various Kriging methods. This library was developed to address the lack of comprehensive open-source tools providing state-of-the-art geostatistical methods. GSTools offers an abundance of methods in a modern object-oriented approach, facilitating effective implementation of spatial interpolation techniques. The library supports various Kriging methods, including simple, ordinary, universal, external drift, and detrended Kriging.
+
+Beyond Kriging, GSTools provides functionality for covariance models, random field generation, field transformations, variogram estimation, and I/O routines. It also includes plotting routines to visualize covariance models or random fields during analysis. The library is developed openly within a GitHub organization to respond to the needs of the modeling community and to integrate suggested functionalities and contributions. This open development approach also ensures stability and reliability of the code-base through continuous-integration features.
+
+### Kolmogorov Arnold Networks (KANs)
+
+Kolmogorov Arnold Networks (KANs) represent a novel neural architecture inspired by the Kolmogorov Arnold representation theorem. These networks leverage B-Spline parameterizations for flexible, locally adaptive function approximation. KANs offer a significant advancement over traditional neural networks in their ability to capture complex nonlinearities beyond those modeled by standard MultiLayer Perceptrons. However, KANs frequently exhibit miscalibrated confidence estimates, manifesting as overconfidence in dense data regions and underconfidence in sparse areas.
+
+KANs are based on the Kolmogorov-Arnold representation theorem, which enables their scalability and high performance in high-dimensional spaces. The mathematical backbone of KANs involves interpolation methods and Basis-splines, which provide the foundation for their function approximation capabilities. A key advantage of KANs is their claimed freedom from the curse of dimensionality, which poses a significant challenge to modern MLP-based architectures. This characteristic makes KANs particularly valuable for high-dimensional learning tasks typical in weather forecasting.
+
+The relationship between KANs and traditional neural networks has been explored in research, with studies providing explicit constructions to convert piecewise linear KANs into ReLU networks and vice versa. This connection helps situate KANs within the broader neural network landscape while highlighting their unique characteristics. Recent research has also demonstrated that MLPs can learn in-context on regression and classification tasks comparably with Transformers under the same compute budget. This finding challenges prior assumptions about the limitations of MLPs in relational tasks and supports growing interest in MLP-based architectures as alternatives to attention-based models.
+
+### KANs in Time Series Forecasting
+
+In multivariate time series forecasting, KANs have shown considerable promise. Despite significant advancements in time series forecasting techniques, existing methods often struggle with inadequate interpretability. The emergence of KANs provides a new perspective to address this challenge. Research has evaluated the effectiveness of KANs in time series forecasting from multiple perspectives, including performance, integrability, efficiency, and interpretability.
+
+To enhance KAN capabilities for time series data, researchers have proposed the Multi-layer Mixture-of-KAN network (MMK), which achieves excellent performance while retaining KAN's ability to be transformed into a combination of symbolic functions. The core module of this approach is the mixture-of-KAN layer, which uses a mixture-of-experts structure to assign variables to best-matched KAN experts. Extensive experimental results demonstrate that KANs are indeed effective in multivariate time series forecasting tasks.
+
+KANs have been successfully applied to specific forecasting applications, such as short-term load forecasting in power systems. In this domain, KANs enhance input feature learning and can outperform traditional neural predictive models. By leveraging KANs, the interpretability of model parameters can be improved, allowing detailed analytical expressions of the model to be derived. This interpretability advantage is significant for artificial intelligence-based decision-making processes where understanding the relationship between inputs and outputs is crucial.
+
+### KANs in Financial and Volatility Forecasting
+
+Beyond meteorological applications, KANs have demonstrated effectiveness in forecasting financial time series. For instance, KANs have been applied to forecasting the CBOE Volatility Index (VIX). Unlike traditional MLP-based neural networks that are often criticized for their black-box nature, KANs offer an interpretable approach via learnable spline-based activation functions and symbolification. Based on a parsimonious architecture with symbolic functions, KANs can express forecasts as closed-form expressions in terms of explanatory variables.
+
+This approach provides interpretable insights into key characteristics of financial time series, such as mean reversion and leverage effects. Through empirical analysis across multiple datasets and periods, KANs achieve competitive forecasting performance while requiring significantly fewer parameters compared to MLP-based neural network models. These findings demonstrate the capacity and potential of KANs as an interpretable financial time-series forecasting method.
+
+In stock price forecasting, researchers have proposed a permuted Temporal Kolmogorov-Arnold Network (pTKAN) that integrates news sentiment analysis with price data. This approach generates daily sentiment scores using aspect-based sentiment analysis and combines them with stock transaction history for unified forecasting. Experimental results show that the sentiment scores positively influence forecasting performance when using Temporal Kolmogorov-Arnold Networks. The pTKAN architecture outperformed 19 other architectures, including traditional, machine learning, and deep learning-based approaches, across 25 of 27 stock issuers tested.
+
+### KANs for Causal Inference in Time Series
+
+KANs have also been extended to causal inference applications through the development of Granger causality inference Kolmogorov-Arnold Networks (KANGCI). This architecture extends KANs to the domain of causal inference by extracting base weights from KAN layers and incorporating sparsity-inducing penalty and ridge regularization. This approach effectively infers Granger causality from time series data. Additionally, researchers have proposed an algorithm based on time-reversed Granger causality that automatically selects causal relationships with better inference performance.
+
+Comprehensive experiments conducted on various datasets demonstrate that the proposed model achieves competitive performance compared to state-of-the-art methods in inferring Granger causality from nonlinear, high-dimensional, and limited-sample time series. This capability is particularly valuable for understanding the complex causal relationships that may exist within meteorological time series data. The ability to identify causal relationships can enhance both the accuracy and interpretability of rainfall forecasting models.
+
+### Real Estate and Other Practical Applications of KANs
+
+Beyond meteorological and financial applications, KANs have been successfully employed in real estate forecasting. Research has introduced a novel approach to house price estimation using KANs, leveraging their basis in the Kolmogorov-Arnold theorem. When tested on multiple datasets, the KAN model demonstrated superior performance compared to existing state-of-the-art methods for predicting house prices. By delivering more precise price forecasts, the model supports improved decision-making for real estate stakeholders.
+
+The D_KAN model has been proposed as an improvement for power load forecasting, integrating KANs into the DLinear power load time series prediction framework. This model utilizes KAN's learnable activation functions, parameterized by spline functions, to enhance the accuracy of electricity demand forecasting. Experimental results indicate that the D_KAN model performs more accurately in short-term predictions compared to the DLinear model. These diverse applications highlight the versatility and effectiveness of KANs across different domains involving time series forecasting.
+
+### Meteorological Data Interpolation in the Valais Region
+
+The Valais region of Switzerland presents unique challenges for meteorological data interpolation due to its complex terrain. Research has explored various approaches for accurately interpolating meteorological parameters in mountainous regions. The Parameter-elevation Regressions on Independent Slopes Model (PRISM) approach has shown better performance compared to other methods like Kriging and Spline in such regions. Tests conducted in the Heihe River Basin demonstrated the superiority of the PRISM approach over other discussed methods in the context of mountain regions, suggesting its potential applicability to the Valais region.
+
+For meteorological record interpolation, neural network-based models have been developed to leverage their non-linear reflection abilities. Analysis of interpolation precision using reanalyzed NCEP meteorological grid records has provided insights into the characteristics of meteorological record distribution. Research indicates that iterative times and the selection of training samples influence interpolation precision, with different meteorological elements having different optimal iterative times and training sample selections. These findings offer guidance for enhancing interpolation precision in complex regions like Valais.
+
+Spatial interpolation of meteorological parameters that are closely related to the earth's surface plays an important role in climatological studies. Traditional spatial interpolation methods often ignore the geographic semantics of interpolation sample points in practical applications. Improved algorithms, such as inverse-distance weighting interpolation considering geographic semantics (S-IDW), can enhance interpolation accuracy by adding geographic semantic similarity to traditional formulas. This approach comprehensively considers the geographic semantic differences between sample points and estimation points during the interpolation process.
+
+### Towards Improved Rainfall Forecasting in the Valais Region
+
+Integrating spatial interpolation techniques with advanced machine learning approaches like KANs presents a promising avenue for enhancing rainfall forecasting in the Valais region. Rainfall data provide critical input for various water resources management tasks, and accurate spatial distribution information is essential. While a dense network of rain gauges would ideally provide comprehensive rainfall data, networks are usually sparse in practice, limiting the ability to characterize the spatial distribution of highly variable rainfall. Spatial interpolation methods thus play a crucial role in estimating rainfall at unrecorded locations using observed data from surrounding areas.
+
+Traditional Kriging methods have limitations, including the requirement for a priori definition of mathematical functions for variogram models. The selection of appropriate variogram models, finding optimal parameters, and the computational burden involved present significant challenges. Data-driven models using evolutionary principles, including genetic algorithms and artificial neural networks, have been combined with Kriging to address these limitations. Genetic programming has been investigated for variogram modeling to derive models for use with traditional ordinary Kriging for spatial interpolation of rainfall.
+
+The combination of KANs with advanced spatial interpolation techniques could potentially overcome many of the current limitations in rainfall forecasting for the Valais region. By leveraging the strengths of KANs in capturing complex nonlinear relationships in multivariate time series data, along with the spatial accuracy provided by Kriging with external drift, more accurate and interpretable rainfall forecasts could be developed for this challenging geographical area.
+
+Bibliography
+ @misc{A. Haryono_R. Sarno_Ratih N. E. Anggraini_K. Sungkono_2024, title={Permuted Temporal Kolmogorov-Arnold Networks for Stock Price Forecasting Using Generative Aspect-Based Sentiment Analysis}, url={https://www.semanticscholar.org/paper/456ae7e200c56635a9c7cc50ec255682b783c1ab}, journal={IEEE Access}, author={A. Haryono and R. Sarno and Ratih N. E. Anggraini and K. Sungkono}, year={2024}, month=jan }
+
+ @misc{Angela Bothaju_Maunika Patnaik_K. Keerthana_K. U. Deep_Pardha Saradhi_2020, title={Rainfall Prediction Using Machine Learning}, url={https://www.semanticscholar.org/paper/82022a1cc6a40c3ab45e775b064f1a781e885b87}, author={Angela Bothaju and Maunika Patnaik and K. Keerthana and K. U. Deep and Pardha Saradhi}, year={2020}, month=jan }
+
+ @misc{Apoorva Singhroul_Sanjay Agrawal_2021, title={Artificial Neural Networks in Weather Forecasting -A Review}, url={https://www.semanticscholar.org/paper/a8bc921e763f911221b464b8ae4dddf5fa793658}, journal={2021 International Conference on Advances in Technology, Management & Education (ICATME)}, author={Apoorva Singhroul and Sanjay Agrawal}, year={2021}, month=jan }
+
+ @misc{Bozhen Jiang_Yidi Wang_Qin Wang_Hua Geng_2025, title={A Novel Interpretable Short-Term Load Forecasting Method Based on Kolmogorov-Arnold Networks}, url={https://www.semanticscholar.org/paper/3bb191eab18c86d5a83e60cea3ceefcc5c49950d}, journal={IEEE Transactions on Power Systems}, author={Bozhen Jiang and Yidi Wang and Qin Wang and Hua Geng}, year={2025}, month=jan }
+
+ @misc{Cui De-you_2012, title={Application of Combination Model in Rainfall Prediction}, url={https://www.semanticscholar.org/paper/0ff95f546c02840715f58297d70621aa3ca8a7d4}, author={Cui De-you}, year={2012}, month=jan }
+
+ @misc{D. Yeung_Xiaoqin Zeng_2017, title={Output Sensitivity of MLPs Derived from Statistical Expectation}, url={https://www.semanticscholar.org/paper/bae9aa36bd7f7c1a6bf2815cbd5cd22fd8c6b41d}, author={D. Yeung and Xiaoqin Zeng}, year={2017}, month=feb }
+
+ @misc{Daniel Berberich_2020, title={Hybrid Methods for Time Series Forecasting}, url={https://www.semanticscholar.org/paper/de1e4718b8d92aad9ef6fac7e597b92230eab176}, author={Daniel Berberich}, year={2020}, month=jan }
+
+ @misc{Divesh Basina_Joseph Raj Vishal_Aarya Choudhary_Bharatesh Chakravarthi_2024, title={KAT to KANs: A Review of Kolmogorov-Arnold Networks and the Neural Leap Forward}, url={https://www.semanticscholar.org/paper/be629f3991d3722da763921fdfb2de6a35132267}, journal={ArXiv}, author={Divesh Basina and Joseph Raj Vishal and Aarya Choudhary and Bharatesh Chakravarthi}, year={2024}, month=nov }
+
+ @misc{Gao Tai-chang_2008, title={Method and analysis of meteorological record interpolation based on neural network}, url={https://www.semanticscholar.org/paper/528ba9b9553e15e765369da70dc76a601a27cfc3}, journal={Journal of PLA University of Science and Technology}, author={Gao Tai-chang}, year={2008}, month=jan }
+
+ @misc{H. Bourennane_D. King_P. Chéry_A. Bruand_1996, title={Improving the kriging of a soil variable using slope gradient as external drift}, url={https://www.semanticscholar.org/paper/bd0cb0faea6c7ea7048ecd9523c79d7c45a1351b}, journal={European Journal of Soil Science}, author={H. Bourennane and D. King and P. Chéry and A. Bruand}, year={1996}, month=dec }
+
+ @misc{Huijun Zhang_Yaxin Liu_Chongyu Zhang_Ningyun Li_2025, title={Machine Learning Methods for Weather Forecasting: A Survey}, url={https://www.semanticscholar.org/paper/1e006584e119eaed98761f0eac5899d7a8c7260a}, journal={Atmosphere}, author={Huijun Zhang and Yaxin Liu and Chongyu Zhang and Ningyun Li}, year={2025}, month=jan }
+
+ @misc{I. Botygin_Валерий Тартаковский_Владислав Шерстнёв_Анна Шерстнёва_2023, title={Time series forecasting with multilayer perceptrons}, url={https://www.semanticscholar.org/paper/7244981fd8b28a49c3045fb3c117aba3ae46b697}, journal={Atmospheric and Ocean Optics}, author={I. Botygin and Валерий Тартаковский and Владислав Шерстнёв and Анна Шерстнёва}, year={2023}, month=oct }
+
+ @misc{I. Tsonevsky_V. Spiridonov_2010, title={Neural networks for precipitation forecasting in Bulgaria}, url={https://www.semanticscholar.org/paper/8f8e2c999bb91410fdf9fb055807bb09d86fd076}, journal={Idojaras}, author={I. Tsonevsky and V. Spiridonov}, year={2010}, month=jan }
+
+ @misc{Iosif Viktoratos_Athanasios K. Tsadiras_2025, title={Advancing Real-Estate Forecasting: A Novel Approach Using Kolmogorov–Arnold Networks}, url={https://www.semanticscholar.org/paper/1394e6041b939e855033f7dfa0b687125fb7a489}, journal={Algorithms}, author={Iosif Viktoratos and Athanasios K. Tsadiras}, year={2025}, month=feb }
+
+ @misc{J. Yun_Seung-Hyun Paek_Do-Hoon Lee_H. Yoon_2006, title={Traffic Volume Forecasting Model for Cyber Weather Forecasting}, url={https://www.semanticscholar.org/paper/8fdb9dfecd1e81fe91cd56d2564240f0257741a3}, journal={2006 International Conference on Hybrid Information Technology}, author={J. Yun and Seung-Hyun Paek and Do-Hoon Lee and H. Yoon}, year={2006}, month=nov }
+
+ @misc{Julong Huang_Chuhan Lu_Dingan Huang_Yujing Qin_Fei Xin_Hao Sheng_2024, title={A Spatial Interpolation Method for Meteorological Data Based on a Hybrid Kriging and Machine Learning Approach}, url={https://www.semanticscholar.org/paper/0d774a0731853b6a78a4bdb940d5b70871262932}, journal={International Journal of Climatology}, author={Julong Huang and Chuhan Lu and Dingan Huang and Yujing Qin and Fei Xin and Hao Sheng}, year={2024}, month=oct }
+
+ @misc{K. Do_Ba Tung Nguyen_Xuan Thanh Nguyen_Q. H. Bui_T. N. Le_Thi Nhat Thanh Nguyen_Van Quynh Vuong_Huy Lai Nguyen_Thanh Ha Lê_2015, title={Spatial Interpolation and Assimilation Methods for Satellite and Ground Meteorological Data in Vietnam}, url={https://www.semanticscholar.org/paper/0e83aa2bbbaa5e25aff2b9f04aafc5ebff640cb6}, journal={J. Inf. Process. Syst.}, author={K. Do and Ba Tung Nguyen and Xuan Thanh Nguyen and Q. H. Bui and T. N. Le and Thi Nhat Thanh Nguyen and Van Quynh Vuong and Huy Lai Nguyen and Thanh Ha Lê}, year={2015}, month=aug }
+
+ @misc{Kiran Madhusudhanan_Shayan Jawed_Lars Schmidt-Thieme_2024, title={Hyperparameter Tuning MLPs for Probabilistic Time Series Forecasting}, url={https://www.semanticscholar.org/paper/571cbe7c987632484c57fff4b4ad82dcbbbd8358}, journal={ArXiv}, author={Kiran Madhusudhanan and Shayan Jawed and Lars Schmidt-Thieme}, year={2024}, month=mar }
+
+ @misc{Liu Ru-hai_2011, title={Spatial interpolation of precipitation using the PER-Kriging method}, url={https://www.semanticscholar.org/paper/0eb4d09d734ce295fca6c138070220ac639f438f}, journal={Advances in Water Science}, author={Liu Ru-hai}, year={2011}, month=jan }
+
+ @misc{M. N. M. Boezio_J. Costa_J. Koppe_2006, title={Kriging with an external drift versus collocated cokriging for water table mapping}, url={https://www.semanticscholar.org/paper/4712c7d51468b620f006b1e534df8fc9b4a5d131}, journal={Applied Earth Science}, author={M. N. M. Boezio and J. Costa and J. Koppe}, year={2006}, month=sep }
+
+ @misc{M. Räty_J. Heikkinen_A. Kangas_2011, title={Kriging with External Drift in Model Localization}, url={https://www.semanticscholar.org/paper/aa30635c4d3da6b4e6fe731dace52c06884c7ec5}, journal={Math. Comput. For. Nat. Resour. Sci.}, author={M. Räty and J. Heikkinen and A. Kangas}, year={2011}, month=feb }
+
+ @misc{M. Varentsov_I. Esau_Tobias Wolf_2020, title={High-Resolution Temperature Mapping by Geostatistical Kriging with External Drift from Large-Eddy Simulations}, url={https://www.semanticscholar.org/paper/ad4cced6a26e2b8b0325e48d364b37f903f1c43d}, journal={Monthly Weather Review}, author={M. Varentsov and I. Esau and Tobias Wolf}, year={2020}, month=feb }
+
+ @misc{Meiliang Liu_Yunfang Xu_Zijin Li_Zhengye Si_Xiaoxiao Yang_Xinyue Yang_Zhiwen Zhao_2025, title={Kolmogorov-Arnold Networks for Time Series Granger Causality Inference}, url={https://www.semanticscholar.org/paper/578e50ea1825773e6e608474db6b21e8b43b7dd3}, journal={ArXiv}, author={Meiliang Liu and Yunfang Xu and Zijin Li and Zhengye Si and Xiaoxiao Yang and Xinyue Yang and Zhiwen Zhao}, year={2025}, month=jan }
+
+ @misc{Mengyuan Jiang_Huabing Zhou_2024, title={D_KAN Model: Enhancing Power Load Forecasting with Kolmogorov-Arnold Networks}, url={https://www.semanticscholar.org/paper/d1097614650db6aa8c2ae088463ca3f6b455a25a}, journal={2024 4th International Conference on Energy Engineering and Power Systems (EEPS)}, author={Mengyuan Jiang and Huabing Zhou}, year={2024}, month=aug }
+
+ @misc{N. Gustafsson_2002, title={Statistical Issues in Weather Forecasting *}, url={https://www.semanticscholar.org/paper/8e204d417837605feac07340367b8ca6552164b3}, journal={Scandinavian Journal of Statistics}, author={N. Gustafsson}, year={2002}, month=jun }
+
+ @misc{Nandi Schoots_Mattia Jacopo Villani_Niels uit de Bos_2025, title={Relating Piecewise Linear Kolmogorov Arnold Networks to ReLU Networks}, url={https://www.semanticscholar.org/paper/1005e071d7a9c22cd01a2ad3fe28804ddc55d8f7}, author={Nandi Schoots and Mattia Jacopo Villani and Niels uit de Bos}, year={2025}, month=mar }
+
+ @misc{Olgu Aydın_2018, title={EVALUATION OF KRIGING WITH EXTERNAL DRIFT METHOD IN SPATIAL MODELLING OF PRECIPITATION: A CASE OF AEGEAN REGION, TURKEY}, url={https://www.semanticscholar.org/paper/78fad0c8d7a4e5ae0ac66ad84d8e6c391cc4e607}, author={Olgu Aydın}, year={2018}, month=apr }
+
+ @misc{Priyanka Rajvanshi_Amit Singh_2012, title={Rainfall prediction model}, url={https://www.semanticscholar.org/paper/1e5842ea7c2539bdabdf2cfd1b85b48c28229c1b}, journal={Environment Conservation Journal}, author={Priyanka Rajvanshi and Amit Singh}, year={2012}, month=jun }
+
+ @misc{Rushil V. Patel_2021, title={Literature Review on Rainfall Prediction}, url={https://www.semanticscholar.org/paper/1fc97d01cd041939618727c0e6e6202cc1744419}, author={Rushil V. Patel}, year={2021}, month=jan }
+
+ @misc{S. Adhikary_A. Yilmaz_N. Muttil_2015, title={Improved spatial interpolation of rainfall using Genetic Programming}, url={https://www.semanticscholar.org/paper/fed1bef7c4814a35e182881535190e1177484ad4}, author={S. Adhikary and A. Yilmaz and N. Muttil}, year={2015}, month=dec }
+
+ @misc{S. Kottur_Dr. S. S. Mantha_2015, title={An Integrated Model using Artificial Neural Network (ANN) and Kriging for Forecasting Air Pollutants using Meteorological Data}, url={https://www.semanticscholar.org/paper/8726eee8bd91c6360a25556fe2f58eeae92270c3}, journal={International Journal of Advanced Research in Computer and Communication Engineering}, author={S. Kottur and Dr. S. S. Mantha}, year={2015}, month=jan }
+
+ @misc{Sebastian Müller_L. Schüler_A. Zech_S. Attinger_F. Heße_2020, title={GSTools: The Python toolbox for your geo-statistical project!}, url={https://www.semanticscholar.org/paper/5a0f5489f08dbebab8bf32524849d107412a65db}, author={Sebastian Müller and L. Schüler and A. Zech and S. Attinger and F. Heße}, year={2020}, month=mar }
+
+ @misc{Shang Song-hao_2006, title={Comparison of Kriging spatial interpolation methods of non-stationary regionalized variables}, url={https://www.semanticscholar.org/paper/89b0650211384a8e72ac2318ba954506019f1354}, journal={Advances in Science and Technology of Water Resources}, author={Shang Song-hao}, year={2006}, month=jan }
+
+ @misc{So-Yoon Cho_Sungchul Lee_Hyun-Gyoon Kim_2025, title={Forecasting VIX using interpretable Kolmogorov-Arnold networks}, url={https://www.semanticscholar.org/paper/4e30fa55d4283babccd9b2ffacaa7c02d9d69490}, journal={ArXiv}, author={So-Yoon Cho and Sungchul Lee and Hyun-Gyoon Kim}, year={2025}, month=feb }
+
+ @misc{Sven F. Crone_R. Dhawan_2007, title={Forecasting Seasonal Time Series with Neural Networks: A Sensitivity Analysis of Architecture Parameters}, url={https://www.semanticscholar.org/paper/7753f5639bd0f69ebcb21646026ce71474f1ad80}, journal={2007 International Joint Conference on Neural Networks}, author={Sven F. Crone and R. Dhawan}, year={2007}, month=oct }
+
+ @misc{T. Gadekallu_Bushra Kidwai_Saksham Sharma_R. Pareek_Sudheer Karnam_2019, title={Application of Data Mining Techniques in Weather Forecasting}, url={https://www.semanticscholar.org/paper/9c3cecc9df66ba77a45b1c299ed38131e0a0857b}, journal={Advances in Business Information Systems and Analytics}, author={T. Gadekallu and Bushra Kidwai and Saksham Sharma and R. Pareek and Sudheer Karnam}, year={2019}, month=jan }
+
+ @misc{Wenhao Liang_W. Zhang_Lin Yue_Miao Xu_Olaf Maennel_Weitong Chen_2025, title={PostHoc FREE Calibrating on Kolmogorov Arnold Networks}, url={https://www.semanticscholar.org/paper/49b63a1cc5922e7335dfd93a770544e97e9f72ec}, author={Wenhao Liang and W. Zhang and Lin Yue and Miao Xu and Olaf Maennel and Weitong Chen}, year={2025}, month=mar }
+
+ @misc{Wenjun Wu_Ruijie Gan_Junli Li_Xiu Cao_Xinxin Ye_Jie Zhang_Hongjiao Qu_2020, title={A Spatial Interpolation of Meteorological Parameters considering Geographic Semantics}, url={https://www.semanticscholar.org/paper/5f447f7d8739544cd130da9d294658354d18eea5}, journal={Advances in Meteorology}, author={Wenjun Wu and Ruijie Gan and Junli Li and Xiu Cao and Xinxin Ye and Jie Zhang and Hongjiao Qu}, year={2020}, month=sep }
+
+ @misc{William L. Tong_C. Pehlevan_2024, title={MLPs Learn In-Context on Regression and Classification Tasks}, url={https://www.semanticscholar.org/paper/3e4554778b199067a19258b457acb79a314d2ec1}, author={William L. Tong and C. Pehlevan}, year={2024}, month=may }
+
+ @misc{Xiao Han_Xinfeng Zhang_Yiling Wu_Zhenduo Zhang_Zhe Wu_2024, title={Are KANs Effective for Multivariate Time Series Forecasting?}, url={https://www.semanticscholar.org/paper/85a2c4f78f2df35462c5d87de222b3265ae3bc27}, author={Xiao Han and Xinfeng Zhang and Yiling Wu and Zhenduo Zhang and Zhe Wu}, year={2024}, month=aug }
+
+ @misc{Xuan Thanh Nguyen_Ba Tung Nguyen_K. Do_Q. H. Bui_Thi Nhat Thanh Nguyen_Van Quynh Vuong_Thanh Ha Lê_2015, title={Spatial Interpolation of Meteorologic Variables in Vietnam using the Kriging Method}, url={https://www.semanticscholar.org/paper/468da93b70f4de1452a06ed7014241a25a66e0a9}, journal={J. Inf. Process. Syst.}, author={Xuan Thanh Nguyen and Ba Tung Nguyen and K. Do and Q. H. Bui and Thi Nhat Thanh Nguyen and Van Quynh Vuong and Thanh Ha Lê}, year={2015}, month=feb }
+
+ @misc{Z. Deng_2004, title={Interpolation of Meteorological Data Based on DEM Using PRISM Model}, url={https://www.semanticscholar.org/paper/e6c428efa33fb317144839eb64ea24f6591b6564}, author={Z. Deng}, year={2004}, month=jan }
+
+ @misc{Zhi-hong Liu_Xin-min Mu_2008, title={Interpolation for time series of meteorological variables using ANUSPLIN}, url={https://www.semanticscholar.org/paper/f1a3e7e444c05b233e1b96fe5343fc76268356ab}, journal={Journal of Northwest A & F University}, author={Zhi-hong Liu and Xin-min Mu}, year={2008}, month=jan }
+
+ @misc{2015, title={Spatial interpolation of daily meteorological data}, url={https://www.semanticscholar.org/paper/fd498518ababc40f6278a5ebc1143817a192aafd}, year={2015}, month=jan } 

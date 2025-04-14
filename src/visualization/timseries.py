@@ -5,6 +5,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.dates as mdates
 import seaborn as sns
 import numpy as np
 from functools import reduce
@@ -52,108 +53,136 @@ def all_ts(station='SIO'):
     plt.show()
     plt.savefig('report/figures/all_vars_sion.pdf', dpi=100)
 
-#plotting the temperature for each station
 def all_stations_ts():
+    valais_stations = ["SIO","VSSIE", "ZER", "VSDER", "VIS"]
+    station_name = ["Sion", "Sierre", "Zermatt", "Derborence", "Visp"]
 
-    vaud_stations = ["LSN","PUY", "VEV", "COS", "AVA"]
-    station_name = ["Lausanne", "Pully", "Vevey", "Cossonay", "Les Avants"]
-
-    precip_filter = precip[precip['station'].isin(vaud_stations)]
-    precip_wide = precip_filter.pivot(index='time', columns='station', values='precipitation')
+    precip_filter = everything[everything['station'].isin(valais_stations)]
+    precip_wide = precip_filter.pivot(index='time', columns='station', values='precip')
     
     precip_wide.index = pd.to_datetime(precip_wide.index, format='%Y%m%d%H%M')
 
     y_max = precip_wide.max().max()
 
-    fig, axes = plt.subplots(len(vaud_stations), 1, figsize=(12, 6), sharex=True)
+    fig, axes = plt.subplots(len(valais_stations), 1, figsize=(12, 6), sharex=True)
 
-    # Iterate correctly using zip
-    for i, (station, name) in enumerate(zip(vaud_stations, station_name)):
-        axes[i].plot(precip_wide.index, precip_wide[station], label=name, color='darkblue')
-        axes[i].set_ylim(0, y_max) 
-        axes[i].legend(loc="upper right", fontsize=8)
-        axes[i].grid(True, linestyle="--", alpha=0.5)
+    for ax, station, name in zip(axes, valais_stations, station_name):
+        ax.plot(precip_wide.index, precip_wide[station], label=name, color='darkblue')
+        ax.xaxis.set_major_locator(mdates.YearLocator(1))
+        ax.xaxis.set_minor_locator(mdates.MonthLocator(bymonth=(1, 7))) 
+        ax.set_ylim(0, y_max) 
+        ax.legend(loc="upper right", fontsize=8)
+        ax.tick_params(axis=u'both', which=u'both',length=0)
+        ax.grid(True, which='both', linestyle="--", alpha=0.5)
 
     # Set common labels
-    axes[2].set_ylabel("Precipitation (mm)")
-    axes[-1].set_xlabel("Time")
-    fig.suptitle("Precipitation Time Series for Selected Stations Around Lausanne")
+    axes[2].set_ylabel("Precipitation (mm)", fontsize=13)
+    axes[-1].set_xlabel("Time", fontsize=13)
+    fig.suptitle("Precipitation Time Series for Selected Stations in Valais", fontsize=13)
 
-    plt.tight_layout()
-    plt.savefig("report/figures/lausanne_stations_ts.pdf")
+    plt.tight_layout()  
+    plt.savefig("report/figures/valais_stations_ts.pdf", dpi=100)
     plt.show()
   
 def monthly_vd_ts():
-    vaud_stations = ["LSN","PUY", "VEV", "COS", "AVA"]
-    station_name = ["Lausanne", "Pully", "Vevey", "Cossonay", "Les Avants"]
+    valais_stations = ["SIO","VSSIE", "ZER", "VSDER", "VIS"]
+    station_name = ["Sion", "Sierre", "Zermatt", "Derborence", "Visp"]
 
-    precip_filter = precip[precip['station'].isin(vaud_stations)]
-    precip_wide = precip_filter.pivot(index='time', columns='station', values='precipitation')
+    precip_filter = everything[everything['station'].isin(valais_stations)]
+    precip_wide = precip_filter.pivot(index='time', columns='station', values='precip')
     
     precip_wide.index = pd.to_datetime(precip_wide.index, format='%Y%m%d%H%M')
 
-    monthly_precip = precip_wide.resample('W').sum()
+    monthly_precip = precip_wide.resample('ME').sum()
+    bar_width = 0.19
+    x = np.arange(len(monthly_precip.index))
 
     fig, ax = plt.subplots(figsize=(12,6))
 
-    for station, name in zip(vaud_stations, station_name):
-        ax.plot(monthly_precip.index, monthly_precip.loc[:, station], label=name, alpha=0.7)
-    
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Precipitation (mm)")
-    ax.set_title("Monthly precipitation total for selected stations")
+    for i, (station, name) in enumerate(zip(valais_stations, station_name)):
+        ax.bar(x + i* bar_width, monthly_precip[station], width=bar_width, label=name)
+
+    ax.set_xticks(x + (bar_width * (len(valais_stations) / 2)))
+    ax.set_xticklabels(monthly_precip.index.strftime('%Y-%m'), rotation=45)    
+    ax.set_xlabel("Time", fontsize=13)
+    ax.set_ylabel("Precipitation (mm)", fontsize=13)
+    ax.set_title("Monthly precipitation total for selected stations", fontsize=13)
     ax.legend(loc="upper right", ncol=1, fontsize=8)
     ax.grid(True, linestyle="--", alpha=0.5)
 
     plt.tight_layout()
-    plt.savefig("report/figures/monthly_lausanne_ts.pdf")
+    plt.savefig("report/figures/monthly_valais_bar.pdf")
     plt.show()
    
 def cumsum_vd_ts():
-    vaud_stations = ["LSN","PUY", "VEV", "COS", "AVA"]
-    station_name = ["Lausanne", "Pully", "Vevey", "Cossonay", "Les Avants"]
+    valais_stations = ["SIO","VSSIE", "ZER", "VSDER", "VIS", 'median']
+    station_name = ["Sion", "Sierre", "Zermatt", "Derborence", "Visp", 'Median value']
 
-    precip_filter = precip[precip['station'].isin(vaud_stations)]
-    precip_wide = precip_filter.pivot(index='time', columns='station', values='precipitation')
-    
+    precip_wide = everything.pivot(index='time', columns='station', values='precip')
     precip_wide.index = pd.to_datetime(precip_wide.index, format='%Y%m%d%H%M')
-
     monthly_precip = precip_wide.cumsum()
 
+    monthly_precip['median'] = monthly_precip.median(axis=1)
+
     fig, ax = plt.subplots(figsize=(12,6))
 
-    for station, name in zip(vaud_stations, station_name):
-        ax.plot(monthly_precip.index, monthly_precip.loc[:, station], label=name)
+    for station, name in zip(valais_stations, station_name):
+        if station =='median':
+            ax.plot(monthly_precip.index, monthly_precip.loc[:, station], label=name, linewidth=2, color='darkblue')
+        else:
+            ax.plot(monthly_precip.index, monthly_precip.loc[:, station], label=name, alpha=0.8)
     
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Precipitation (mm)")
-    ax.set_title("Cumulative precipitation sum for Selected Stations around Lausanne")
-    ax.legend(loc="upper right", ncol=1, fontsize=8)
+    ax.set_xlabel("Time", fontsize=13)
+    ax.set_ylabel("Precipitation (mm)", fontsize=13)
+    ax.set_title("Cumulative precipitation sum for selected stations with median Valais value", fontsize=13)
+    ax.legend(loc="upper left", ncol=1, fontsize=8)
     ax.grid(True, linestyle="--", alpha=0.5)
 
     plt.tight_layout()
-    plt.savefig("report/figures/cumsum_vd_ts.pdf")
+    plt.savefig("report/figures/cumsum_valais_ts.pdf")
     plt.show()
 
-def cumsum_periods(station='PUY'):
-    precip_filter = precip[precip['station']==station]
-    
+def cumsum_periods(station='SIO'):
+    precip_filter = everything[everything['station'] == station].copy()
     precip_filter.index = pd.to_datetime(precip_filter['time'], format='%Y%m%d%H%M')
 
-    precip_filter_period = precip_filter.groupby(precip_filter.index.to_period('Q'))['precipitation'].cumsum()
+    # Create quarter and year columns
+    precip_filter['quarter'] = precip_filter.index.to_period('Q')
+    precip_filter['year'] = precip_filter.index.to_period('Y')
 
-    fig, ax = plt.subplots(figsize=(12,6))
+    # Compute cumulative precipitation within each quarter
+    precip_filter['cumsum_precip'] = precip_filter.groupby(['year', 'quarter'])['precip'].cumsum()
 
-    ax.plot(precip_filter_period.index, precip_filter_period, label=station, color='darkblue')
-    
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Precipitation (mm)")
-    ax.set_title("Quarterly cumulative precipitation over Pully")
-    ax.legend(loc="upper right", ncol=1, fontsize=8)
-    ax.grid(True, linestyle="--", alpha=0.5)
+    # Create subplots
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+    axes = axes.flatten()
+
+    months = pd.date_range(start='1/1/2018', periods=12, freq='ME')
+    # Iterate through quarters (1 to 4)
+    for i, q in enumerate([1, 2, 3, 4]):
+        ax = axes[i]
+        quarter_data = precip_filter[precip_filter.index.quarter == q]
+
+        # Plot cumulative precipitation for each year within the quarter
+        for year in quarter_data['year'].unique():
+            yearly_data = quarter_data[quarter_data['year'] == year]
+            yearly_data = yearly_data.reset_index(drop=True)
+            ax.plot(yearly_data.index, yearly_data['cumsum_precip'], label=str(year), alpha=0.7)
+            
+
+
+        # Formatting each subplot
+        ax.set_xticklabels([])
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Cumulative Precipitation (mm)")
+        ax.legend(loc="upper left", fontsize=8)
+        ax.grid(True, linestyle="--", alpha=0.5)
+
+    # Main figure title
+    fig.suptitle(f"Quarterly Cumulative Precipitation - Sion", fontsize=15)
 
     plt.tight_layout()
-    plt.savefig("report/figures/cumsum_quarter_pully.pdf")
+    plt.savefig(f"report/figures/cumsum_quarter_sion.pdf")
     plt.show()
 
 def overlap_cumsum(station='PUY'):
@@ -220,36 +249,15 @@ def temp_overlap(station='PUY'):
     # Save the plot to a file
     #plt.savefig(f"report/figures/monthly_temp_pully.pdf")
 
-def correlation(station='PUY'):
-    precip = pd.read_csv("data/filtered/precipitation_filter.csv")
-    moisture = pd.read_csv("data/filtered/moisture_filter.csv")
-    pression = pd.read_csv("data/filtered/pression_filter.csv")
-    temperature = pd.read_csv("data/filtered/temperature_filter.csv")
-    wind = pd.read_csv("data/filtered/wind_vectors_filter.csv")
+def correlation(station='SIO'):
+    sion_data = everything[everything['station'] == station].drop(columns=['station', 'time'])
 
-    temp_data = temperature[temperature['station'] == station]
-    precip_data = precip[precip['station'] == station]
-    wind_data = wind[wind['station'] == station]
-    moisture_data = moisture[moisture['station'] == station]
-    pression_data = pression[pression['station'] == station]   
-
-    temp_data.index = pd.to_datetime(temp_data['time'], format='%Y%m%d%H%M')
-    precip_data.index = pd.to_datetime(precip_data['time'], format='%Y%m%d%H%M')
-    wind_data.index = pd.to_datetime(wind_data['time'], format='%Y%m%d%H%M')
-    moisture_data.index = pd.to_datetime(moisture_data['time'], format='%Y%m%d%H%M')
-    pression_data.index = pd.to_datetime(pression_data['time'], format='%Y%m%d%H%M')
-
-    merged_data = precip_data[['precipitation']].merge(temp_data[['temperature']], left_index=True, right_index=True, how='left')
-    merged_data = merged_data.merge(wind_data[['North', 'East']],  left_index=True, right_index=True, how='left')
-    merged_data = merged_data.merge(moisture_data[['moisture']],  left_index=True, right_index=True, how='left')
-    merged_data = merged_data.merge(pression_data[['pression']],  left_index=True, right_index=True, how='left')
-
-    correlation_matrix = merged_data.corr()
+    correlation_matrix = sion_data.corr()
 
     plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, linewidths=0.5)
-    plt.title("Correlation Matrix of Variables for Pully")
-    plt.savefig('report/figures/correlation_matrix_pully.pdf')
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, vmin=-1, vmax=1, linewidths=0.5)
+    plt.title("Correlation Matrix of Variables - Sion", fontsize=13)
+    plt.savefig('report/figures/correlation_matrix_sion.pdf')
     plt.show()
 
 def station_correlation():
@@ -275,23 +283,38 @@ def station_correlation():
     plt.savefig('report/figures/correlation_matrix_precip_CH.pdf')
     plt.show()
 
-def correlation_n_distance():
-    station_list = ['AIG', 'BEX', 'BIE', 'FRE', 'CHD', 'CDM', 'COS', 'AUB', 'DOL', 'LSN', 'AVA', 'CHB', 'DIA', 'LON', 'MAH', 'CGI', 'ORO', 'PAY', 'PUY', 'PRE', 'VEV', 'VIT']
+def valais_precip_corr(): 
+    everything.index = pd.to_datetime(everything['time'], format='%Y%m%d%H%M')
+    #only take stations that have more than precipitation
+    stations = ['GRC', 'BLA', 'JUN', 'MVE', 'ZER',
+                'ULR', 'SIO', 'GSB', 'VIS', 'EVO',
+                'BIN', 'MAR', 'BOU', 'MTE', 'MOB',
+                'SIM', 'ATT', 'EVI', 'GOR', 'EGH']
+    filtered = everything[everything['station'].isin(stations)]
+    precip_wide = filtered.pivot(index='time', columns='station', values='precip')    
 
+    correlation_matrix = precip_wide.corr()
+    plt.figure(figsize=(13,10))
+    sns.heatmap(correlation_matrix, annot=True, fmt=':^.2f', cmap='coolwarm', center=0, vmin=-1, vmax=1, linewidths=0.5)
+    plt.xlabel("Stations", fontsize=13)
+    plt.ylabel("Stations", fontsize=13)
+    plt.title("Correlation matrix of precipitation for stations in Valais", fontsize=13)
+    plt.savefig('report/figures/correlation_matrix_valais.pdf')
+    plt.show()
+
+def correlation_n_distance():
     stations = pd.read_csv("data/filtered/stations.csv")
-    stations_filter = stations[stations['station'].isin(station_list)]
-    stations_np = stations_filter[['east', 'north']].to_numpy()
+    stations = stations[stations['station'].isin(everything['station'].unique())] #very ugly code
+
+    stations_np = stations[['east', 'north']].to_numpy()
 
     distances = squareform(pdist(stations_np, metric='euclidean'))
     distances = distances[np.triu_indices_from(distances, k=1)]
     distances = distances.flatten()
 
-    precip_copy = precip.copy()  
+    precip_copy = everything[['time', 'station', 'precip']].copy()  
     precip_copy.index = pd.to_datetime(precip_copy['time'], format='%Y%m%d%H%M')
-
-    precip_filter = precip_copy[precip_copy['station'].isin(station_list)]
-
-    precip_wide = precip_filter.pivot(columns='station', values='precipitation')
+    precip_wide = precip_copy.pivot(columns='station', values='precip')
 
     correlation_matrix = precip_wide.corr()
     corr_np = np.array(correlation_matrix)
@@ -304,9 +327,9 @@ def correlation_n_distance():
     ax.scatter(distances, corr_np)
 
     # Set labels and title
-    ax.set_xlabel("Distance between stations (m)")
-    ax.set_ylabel("Precipitation correlation")
-    ax.set_title("Correlation between the distance and the precipitation correlation")
+    ax.set_xlabel("Distance between stations (m)", fontsize=13)
+    ax.set_ylabel("Precipitation correlation", fontsize=13)
+    ax.set_title("Correlation between the distance and the precipitation correlation", fontsize=13)
 
     # Tight layout and show plot
     plt.tight_layout()
@@ -314,24 +337,23 @@ def correlation_n_distance():
     plt.show()
 
 def altitude_precip(): 
-    precip_copy = precip.copy().drop(columns=['time'], errors='ignore')
+    precip_copy = everything.copy().drop(columns=['time'], errors='ignore')
 
     mean_precip = precip_copy.groupby('station').sum().reset_index()
     
 
     stations = pd.read_csv("data/filtered/stations.csv")
-
     merged_df = stations[['station', 'altitude']].merge(mean_precip, on='station', how='inner')
     
-        #plot the scatter
+    #plot the scatter
     fig, ax = plt.subplots(figsize=(10,8))
-
-    ax.scatter(data=merged_df, x='precipitation', y='altitude')
+ 
+    ax.scatter(data=merged_df, x='precip', y='altitude')
 
     # Set labels and title
-    ax.set_xlabel("Total Precipitations (mm)")
-    ax.set_ylabel("Altitude")
-    ax.set_title("Precipitation totals depending on the altitude")
+    ax.set_xlabel("Total Precipitations (mm)", fontsize=13)
+    ax.set_ylabel("Altitude", fontsize=13)
+    ax.set_title("Precipitation totals depending on the altitude", fontsize=13)
 
     # Tight layout and show plot
     plt.tight_layout()
@@ -339,7 +361,7 @@ def altitude_precip():
     plt.show()
 
 def main():
-    all_ts()
+    altitude_precip()
 
 
 if __name__ == '__main__':
