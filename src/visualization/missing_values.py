@@ -9,6 +9,15 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 from sklearn.preprocessing import KBinsDiscretizer
+"""
+Change this file to only look at missing values for Valais
+"""
+df = pd.read_csv('data/combined_missing_data.csv')
+stations = pd.read_csv('data/clean/valais_stations.csv')
+
+miss_df = df[df['station'].isin(stations['station'])]
+
+
 
 def find_missing_chunks(var):
     #open dataframe
@@ -61,11 +70,9 @@ def para_lol():
     combined_df.to_csv("data/combined_missing_data.csv", index=False)
 
 def duration_hist():
-    miss_df = pd.read_csv('data/combined_missing_data.csv')
-
     fig, ax = plt.subplots(figsize=(8,6))
     ax.hist(miss_df['missing_duration']/6,
-            bins = 60,
+            bins = 100,
             color = 'darkblue',
             edgecolor='black')
 
@@ -76,7 +83,7 @@ def duration_hist():
     
     #layout and save
     plt.tight_layout()
-    plt.savefig('report/figures/missing/missing_histogram.pdf')
+    plt.savefig('report/figures/missing/valais/missing_histogram.pdf')
     plt.show()
 
 def categorical_hist():
@@ -99,7 +106,7 @@ def categorical_hist():
            color='darkblue',
            edgecolor='black')
     
-    ax.set_title('Distribution of missing periods', fontsize=13)
+    ax.set_title('Distribution of missing periods in Valais', fontsize=13)
     ax.set_xlabel('Duration (hours)', fontsize=13)
     ax.set_ylabel('Frequency', fontsize=13)
 
@@ -131,7 +138,7 @@ def missing_count():
 
 def missing_count_table():
     miss_df = pd.read_csv('data/combined_missing_data.csv')
-    station_list = pd.read_csv('data/filtered/stations.csv')
+    station_list = pd.read_csv('data/clean/valais_stations.csv')
 
     station_count = miss_df[['station']].value_counts(dropna=False).reset_index()
     station_count.columns = ['station', 'missing_count']
@@ -150,7 +157,7 @@ def missing_count_table():
     summary_table = merged_df['missing_bin'].value_counts().sort_index().reset_index()
     summary_table.columns = ['Missing duration', 'Number of stations']
 
-    latex_table = summary_table.to_latex(index=False, caption="Distribution of Missing Periods by Duration", label="tab:missing_periods", column_format='|l|r|', escape=False)
+    latex_table = summary_table.to_latex(index=False, caption="Distribution of Missing Periods by Count", label="tab:missing_periods", column_format='|l|r|', escape=False)
 
     print(latex_table)
 
@@ -186,9 +193,6 @@ def missing_by_station():
     plt.show()
 
 def missing_intervals_table():
-    # Read missing data
-    miss_df = pd.read_csv('data/combined_missing_data.csv')
-
     # Define bins and labels
     bins = [0, 6, 72, 144, 1008, float("inf")]
     labels = ["<1h", "1-12h", "12h-24h", "1d-7d", ">7d"]
@@ -223,7 +227,7 @@ def missing_intervals_table():
 
 
 def main():
-    categorical_hist()
+    missing_intervals_table()
 
 
 if __name__ == "__main__":
