@@ -1,0 +1,32 @@
+\subsection{Weather Forecasting}
+
+Weather forecasting as a tool is critical to multiple sectors, from agriculture to transportation and even outdoor events. While the idea of predicting the state of the atmosphere has existed since ancient times, modern scientific techniques have only been applied since the nineteenth century.\cite{Sen2017WeatherAW}
+\\
+In recent years, weather forecasting has undergone a profound transformation through the integration of traditional numerical weather prediction (NWP) techniques with modern machine learning (ML) approaches. Producing advances in the accuracy and resolution of these forecasts, particularly in regions with complex terrain such as the Alps.
+\\
+\subsubsection{Numerical Weather Prediction}
+
+Numerical Weather Prediction models remain very important to the field of meteorology.
+First proposed by Abbe and Bjerknes it states that the laws of physics could be used to forecast the weather. \cite{bauer2015quiet} This translates in
+solving governing physical equations of the atmosphere and oceans.
+In 1922 a manual NWP was attempted in Britain, while computer aided NWPs first appeared in the 1950s \cite{schultz2021can}.
+These equations are continuously refined through better parameterizations, data assimilation strategies, and increased resolution. 
+Centers such as the European Centre for Medium-Range Weather Forecasts (ECMWF) provide reanalysis datasets which use past meteorological data to better understand weather conditions and parameters\cite{hersbach2020era5,monteiro2022review}. 
+\\
+Despite this progress, NWP systems can be slow and struggle in mountainous regions where steep topography causes localized phenomena. Studies in Switzerland have demonstrated that current NWP models struggles to predict Foehn winds. \cite{price2025probabilistic, buzzi2008challenges, aichinger2022machine}.
+\\
+In Switzerland, multiple Numerical Weather Prediction (NWP) models are used to generate ensemble forecasts. These models are supported by high-performance computing resources provided by the Swiss National Supercomputing Centre (CSCS). Additionally, the research supercomputer \textit{ALPS} is dedicated to advancing weather and climate modeling through scientific research \cite{abdulah2024boosting}. Forecasting capabilities are also continuously enhanced through international collaboration, particularly with the European Centre for Medium-Range Weather Forecasts (ECMWF) \cite{meteoswiss_icon}.
+
+\subsubsection{Neural Networks for Weather forecasting}
+
+In recent years, neural network architectures have been leveraged to assist with forecasting. These models capitalize on the ability of neural networks to capture non-linearity and learn patterns directly from data without requiring explicit modeling of physical laws. These models allow for faster predictions with superior accuracy. \cite{abhishek2012weather, espeholt2022deep, keisler2022forecasting}. 
+\\
+Various models have demonstrated their ability to accurately forecast the weather. The recently proposed Gencast model, leverages diffusion models and historical data from the ERA5 dataset to provide forecasts up to 15 days in advance with a runtime of only 8 minutes. Other models use Generative adversarial networks to produce forecasts.\cite{baboo2010efficient, bi2023accurate, price2025probabilistic, li2024generative, ravuri2021skilful}
+\\
+Within the Alpine region, machine learning techniques have been increasingly utilized to predict various natural weather phenomena. For instance, models have been developed to forecast foehn winds in Switzerland \cite{aichinger2022machine}, and to detect thunderstorms \cite{perler2009study}. Other studies have integrated data from automatic weather stations and lidar systems to estimate wind energy potential in mountainous terrains \cite{kristianti2023combining}.
+\\
+But, most deep learning approaches to rainfall forecasting rely on radar-based input data.\cite{agrawal2019machine} However, in mountainous regions such as Valais, Switzerland, radar signals are frequently blocked or attenuated by terrain. This results in under representation of lower-level precipitation, particularly in valleys\cite{tobin2011improved}. Ground data from weather stations and gauge networks can help alleviate this.
+\\
+Combination of multiple data sources, including radar, satellite, and surface observations, to improve model robustness exist \cite{germann2022weather}. Nonetheless, for actors with limited access to infrastructure or funding, such as small municipalities or local farmers, these solutions may be impractical. 
+\\
+As a result, there is a growing need for low-cost, localized forecasting systems that operate solely on time series data from automatic weather stations.\cite{kuccukdermenci2024design}. Such systems could democratize access to weather information and support decision-making in data-scarce regions. This study aims to contribute to that goal by developing a lightweight forecast system for the Valais region based exclusively on automatic station data.

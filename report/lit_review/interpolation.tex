@@ -1,0 +1,13 @@
+\subsection{Spatial Interpolation Techniques}
+
+In regions with sparse weather station networks, spatial interpolation becomes vital to estimate missing values or extend coverage. Kriging is one of the most widely used geostatistical techniques in this context. It operates on the principle of spatial autocorrelation, using known observations to infer values at unmeasured locations.
+
+Among the various forms of Kriging, Kriging with External Drift (KED) offers superior performance by incorporating external covariates like digital elevation models (DEMs). In the context of the Valais region, studies have shown that KED can significantly improve the accuracy of interpolated rainfall estimates.\cite{foehn2018spatial} The inclusion of elevation is especially important in alpine areas, where precipitation patterns are heavily influenced by topography.
+
+Open-source libraries such as \texttt{GSTools} simplify the implementation of Kriging and provide additional tools for variogram estimation, model selection, and simulation of spatial fields.\cite{muller2022gstools} These tools can be integrated into forecasting pipelines to support spatial generalization from localized station data.
+
+\subsection{Conclusion}
+
+The Valais region, characterized by its rugged alpine terrain, presents unique challenges for both forecasting and spatial interpolation. Radar methods are often ineffective due to terrain occlusion, and the sparse distribution of automatic stations results in incomplete data coverage. This can lead to uneven model performance and reduced ability to detect extreme weather events.
+
+Combining temporally rich forecasts from models such as KANs with spatial interpolation techniques like KED may offer a robust solution. KANs' expressiveness allows for accurate learning of complex temporal dynamics, while KED can generalize those forecasts spatially in a topography-aware manner. This hybrid approach holds promise for delivering localized, efficient, and interpretable weather forecasts in challenging environments like Valais.

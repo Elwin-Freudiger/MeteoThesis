@@ -1,0 +1,27 @@
+\subsection{Kolmogorov–Arnold Network}
+
+\subsection{Neural Networks for Time Series Forecasting}
+
+Multi-layer Perceptrons (MLPs) have shown potential in time series forecasting due to their ability to approximate complex functions and identify latent temporal patterns.\cite{chen2023tsmixerallmlparchitecturetime} Their relatively simple structure makes them appealing for localized forecasting where interpretability and computational efficiency are priorities.
+
+While MLPs do not always outperform traditional statistical methods such as Exponential Smoothing (ETS) or Auto Regressive Moving Average (ARMA), they offer complementary strengths.\cite{hewamalage2021recurrent} Specifically, MLPs can model non-linear interactions between variables and are capable of learning seasonal or trend-like behavior given sufficient training.
+
+Hybrid approaches combining machine learning models with statistical techniques have demonstrated further improvements. One such example is the fusion of ETS with neural networks, where the statistical model accounts for seasonality and trend, while the neural network learns the residuals.\cite{panigrahi2017hybrid} These hybrid models could offer a practical path toward interpretable and effective forecasting systems in meteorology.
+
+
+\subsection{Kolmogorov–Arnold Networks (KANs)}
+
+Kolmogorov–Arnold Networks (KANs) are a recent neural architecture inspired by the Kolmogorov–Arnold representation theorem.
+This theorem proposed by soviet mathematician Andrey Kolmogorov in 1957 states that continuous functions of high variables can be decomposed into univariate functions. \cite{kolmogorov1961representation}. 
+This theorem was subsequently applied to neural networks, with a different architecture. Whereas MLPs have fixed activation functions on edges, KANs have no linear weight but instead weight parameters are replaced by a univariate function parametrized as a spline. \cite{somvanshi2024survey}. 
+
+Instead of standard activation functions, KANs use B-spline-based activations, this provides better performance and higher interpretability \cite{liu2024kan}.
+
+Multiple subsequent architectures were proposed to enhance the capabilities of KAN networks. 
+For example, DropKAN \cite{altarabichi2024dropkan} that masks activation-functions and claims to lead to better performances. Or Residual Kolmogorov-Arnold Networks, which implement a similar strategy to ResNet and display better results on benchmarking datasets \cite{yu2024residual}.
+Temporal KANs (TKAN) could also be cited, this architecture combines Long Short-Term Memory networks (LSTMs) and KANs, with layers composed of Recurrent KANs \cite{genet2024tkan}. As well as Convolutional Kolmogorov-Arnold Networks, similar to Convolutional Neural Networks (CNNs) which demontrated it's effectiveness on the Fashion-MNIST dataset \cite{bodner2024convolutional}.
+Various studies and papers have been completed, listing them all would be a tedious task. Among these, one relevant to our study one attracts the attention, indeed, this study analyzes and proposes a variant of KAN using Multi-layer Mixture-of-KANs (MMK), which uses a mixture-of-experts structure to assign them to the relevant KAN sub network. The architecture is then tested on several benchmark datasets such as ETT, ECL, Traffic and Weather. With outstanding results\cite{han2024kan4tsf}.
+
+In a subsequent study, the synergy between KANs and science is discussed highlighting the functionalities of the Python package and their capabilities in research\cite{liu2024kan} . Beyond these mostly theoretical considerations, KANs have been applied to a wide variety of real-world problems. 
+For instance, in financial forecasting, KANs have been used to forecast the volatility index with promising levels of accuracy and interpretability \cite{cho2025forecasting}.
+Another relevant application is traffic forecasting, where KANs have been shown to outperform traditional MLPs in modeling non-linear traffic patterns under varying conditions\cite{vaca2024kolmogorov}.
