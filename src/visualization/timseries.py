@@ -34,7 +34,7 @@ def all_ts(station='SIO'):
     monthly_avg = sion_data[['precip', 'speed', 'moisture', 'pression', 'temperature']].resample('ME').mean()
 
     # Create figure with shared x-axis
-    fig, axes = plt.subplots(5, 1, figsize=(10, 10), sharex=True)
+    fig, axes = plt.subplots(5, 1, figsize=(8, 6), sharex=True)
 
     vars=['precip', 'speed', 'moisture', 'pression', 'temperature']
     labels=['Precipitation', 'Wind Speed', 'Moisture', 'Pressure', 'Temperature']
@@ -46,12 +46,12 @@ def all_ts(station='SIO'):
         ax.legend(loc='upper right')
         ax.grid(True, linestyle="--", alpha=0.5)
 
-    axes[-1].set_xlabel("Time")
-    plt.title('Timeseries of available variables with monthly averages', fontsize=13)
+    axes[-1].set_xlabel("Time", fontsize=13)
+    plt.suptitle('Timeseries of available variables with monthly averages', fontsize=13)
     plt.xticks(rotation=45)
     plt.tight_layout()
+    plt.savefig('report/figures/all_vars_sion.pdf')
     plt.show()
-    plt.savefig('report/figures/all_vars_sion.pdf', dpi=100)
 
 def all_stations_ts():
     valais_stations = ["SIO","VSSIE", "ZER", "VSDER", "VIS"]
@@ -171,14 +171,22 @@ def cumsum_periods(station='SIO'):
             
 
 
-        # Formatting each subplot
-        ax.set_xticklabels([])
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Cumulative Precipitation (mm)")
-        ax.legend(loc="upper left", fontsize=8)
-        ax.grid(True, linestyle="--", alpha=0.5)
+            # Formatting each subplot
+            ax.set_xticklabels([])
+            ax.legend(loc="upper left", fontsize=8)
+            ax.grid(True, linestyle="--", alpha=0.5)
+            ax.set_title(f"Q{i + 1}")
 
-    # Main figure title
+
+        # Set x-axis label only on bottom row
+    for ax in [axes[2], axes[3]]:
+        ax.set_xlabel("Time")
+
+    # Set y-axis label only on left column
+    for ax in [axes[0], axes[2]]:
+        ax.set_ylabel("Cumulative Precipitation (mm)")
+
+    # Main figure title and axis labels
     fig.suptitle(f"Quarterly Cumulative Precipitation - Sion", fontsize=15)
 
     plt.tight_layout()
@@ -303,7 +311,7 @@ def valais_precip_corr():
     plt.show()
 
 def correlation_n_distance():
-    stations = pd.read_csv("data/filtered/stations.csv")
+    stations = pd.read_csv("data/clean/valais_stations.csv")
     stations = stations[stations['station'].isin(everything['station'].unique())] #very ugly code
 
     stations_np = stations[['east', 'north']].to_numpy()
@@ -324,7 +332,7 @@ def correlation_n_distance():
     #plot the scatter
     fig, ax = plt.subplots(figsize=(10,8))
 
-    ax.scatter(distances, corr_np)
+    ax.scatter(distances, corr_np, facecolors='none', edgecolors='black', s=50)
 
     # Set labels and title
     ax.set_xlabel("Distance between stations (m)", fontsize=13)
@@ -333,23 +341,21 @@ def correlation_n_distance():
 
     # Tight layout and show plot
     plt.tight_layout()
-    plt.savefig("report/figures/scatter_distance_corr.pdf")
+    plt.savefig("report/figures/scatter_distance_corr_valais.pdf")
     plt.show()
 
 def altitude_precip(): 
     precip_copy = everything.copy().drop(columns=['time'], errors='ignore')
 
-    mean_precip = precip_copy.groupby('station').sum().reset_index()
-    
-
+    mean_precip = precip_copy.groupby('station')['precip'].sum().reset_index()
     stations = pd.read_csv("data/filtered/stations.csv")
     merged_df = stations[['station', 'altitude']].merge(mean_precip, on='station', how='inner')
     
     #plot the scatter
     fig, ax = plt.subplots(figsize=(10,8))
  
-    ax.scatter(data=merged_df, x='precip', y='altitude')
-
+    ax.scatter(data=merged_df, x='precip', y='altitude', facecolors='none', edgecolors='black', s=50)
+    print()
     # Set labels and title
     ax.set_xlabel("Total Precipitations (mm)", fontsize=13)
     ax.set_ylabel("Altitude", fontsize=13)
@@ -357,7 +363,7 @@ def altitude_precip():
 
     # Tight layout and show plot
     plt.tight_layout()
-    plt.savefig("report/figures/sum_precip_altitude.pdf")
+    plt.savefig("report/figures/sum_precip_altitude_vs.pdf")
     plt.show()
 
 def main():

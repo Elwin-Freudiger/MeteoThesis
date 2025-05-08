@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 from sklearn.preprocessing import KBinsDiscretizer
+import statistics as stat
 """
 Change this file to only look at missing values for Valais
 """
@@ -146,18 +147,24 @@ def missing_count_table():
     merged_df = station_list.merge(station_count, how='left', on='station')
     merged_df['missing_count'] = merged_df['missing_count'].fillna(0)   
 
-    bins = [-1, 0, 1, 5, 10, 100, 1000, float("inf")]
+    """    bins = [-1, 0, 1, 5, 10, 100, 1000, float("inf")]
     labels = ["0", "1", "2-5", "6-10", "11-100", "101-1000", ">1000"]
 
     merged_df['missing_bin'] = pd.cut(merged_df['missing_count'],
                                       bins=bins,
                                       labels=labels,
                                       right=True)
+                                      """
 
-    summary_table = merged_df['missing_bin'].value_counts().sort_index().reset_index()
-    summary_table.columns = ['Missing duration', 'Number of stations']
+    summary = merged_df.groupby("missing_count")["station"].apply(lambda x: ", ".join(sorted(x))).reset_index()
 
-    latex_table = summary_table.to_latex(index=False, caption="Distribution of Missing Periods by Count", label="tab:missing_periods", column_format='|l|r|', escape=False)
+    #summary_table = merged_df['missing_bin'].value_counts().sort_index().reset_index()
+    #summary_table.columns = ['Missing duration', 'Number of stations']
+
+    latex_table = summary.to_latex(index=False,
+                                         caption="Missing period count per station",
+                                         label="tab:missing_count_station",
+                                         column_format='|r|l|')
 
     print(latex_table)
 
@@ -224,10 +231,73 @@ def missing_intervals_table():
         print(f"\nLaTeX Table for {label}:")
         print(latex_table)
 
+def boxplot_missing_values():
+    miss_df = pd.read_csv('data/combined_missing_data.csv')
+    station_list = pd.read_csv('data/clean/valais_stations.csv')
+    miss_df = miss_df[miss_df['station'].isin(station_list['station'])]
 
+    #station_counts = miss_df['station'].value_counts()
+    #stations_over_10 = station_counts[station_counts > 10].index
+    miss_df['hours'] = miss_df['missing_duration']/6
+
+    fig, ax = plt.subplots(figsize=(8,6))
+
+    sns.stripplot(x='hours', y='station', data=miss_df, jitter=True,
+                facecolors='none', edgecolor='black', linewidth=0.8)
+    
+    ax.set_title('Missing period duration per station', fontsize=13)
+    ax.set_ylabel('Station', fontsize=13)
+    ax.set_xlabel('Duration (hours)', fontsize=13)
+
+    ax.tick_params(axis='x', colors='black')
+    ax.tick_params(axis='y', colors='black')
+    ax.grid(True, linestyle="--", alpha=0.5)
+
+    plt.tight_layout()
+    plt.savefig('report/figures/missing/valais_only/missing_duration_strip.pdf')
+    plt.show()
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def hist_var():
+    miss_df = pd.read_csv('data/combined_missing_data.csv')
+    station_list = pd.read_csv('data/clean/valais_stations.csv')
+    miss_df = miss_df[miss_df['station'].isin(station_list['station'])]
+    miss_df = miss_df[~miss_df['station'].isin(['VSBRI', 'VSTSN'])]
+
+    vars_counts = miss_df.groupby(['variable', 'station']).size().unstack(fill_value=0)
+
+    vars_counts['total'] = vars_counts.sum(axis=1)
+    vars_counts = vars_counts.sort_values('total', ascending=False)
+    vars_counts = vars_counts.drop(columns='total')
+
+    # Sort stations by total count across all variables (descending)
+    station_totals = vars_counts.sum(axis=0).sort_values(ascending=False)
+    vars_counts = vars_counts[station_totals.index]
+
+    fig, ax = plt.subplots(figsize=(8,6))
+    vars_counts.plot(kind='bar', stacked=True, ax=ax, edgecolor='black')
+
+    # Example custom labels
+    varlist = ['Precipitation', 'Moisture', 'Temperature', 'Pressure']
+    # Replace x-axis labels
+    ax.set_xticks(range(len(varlist)))
+    ax.set_xticklabels(varlist, rotation=0, ha='center') 
+
+    # Titles and labels
+    ax.set_title('Number of missing periods by variable with VSBRI and VSTSN removed', fontsize=13)
+    ax.set_ylabel('Frequency', fontsize=13)
+    ax.set_xlabel('Variable', fontsize=13)
+    ax.legend(loc="upper right", fontsize=8, ncols=4)
+
+    # Layout and save
+    plt.tight_layout()
+    plt.savefig('report/figures/missing/valais/variable_histogram_stacked_filter.pdf')
+    plt.show()
 
 def main():
-    missing_intervals_table()
+    hist_var()
 
 
 if __name__ == "__main__":

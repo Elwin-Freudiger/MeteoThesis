@@ -7,47 +7,6 @@ from tqdm.contrib.concurrent import process_map
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 
-def leave_one_out(df, var, start_date=pd.to_datetime('2019-01-01 00:00'), end_date=pd.to_datetime('2023-12-31 23:50')):
-    """
-    Leave-One-Out Cross-Validation (LOOCV) for Kriging with External Drift.
-    """
-    errors = []
-    df['time'] = pd.to_datetime(df['time'], format= '%Y%m%d%H%M')
-
-    df_available = df[(df['time'] >= start_date) & (df['time'] <= end_date)]
-
-    if df_available.empty:
-        print(f'Error: {start_date} is later than {end_date}')
-        return 0, 0
-
-    for timestamp in tqdm(df_available['time'].unique(), desc='Processing timestamps'):
-        subset = df_available[df_available['time'] == timestamp]
-        subset = subset[~subset[var].isna()]
-
-        if len(subset) < 2:
-            continue
-
-        for i in range(len(subset)):
-            test_point = subset.iloc[i]
-            train_set = subset.drop(subset.index[i])
-
-            known_points = train_set[['east', 'north', 'altitude', var]].values
-            unknown_points = test_point[['east', 'north', 'altitude']].values.reshape(1, -1)
-
-            try:
-                pred = ked_interpolation_gstools_fixed(known_points, unknown_points)[0]
-                true_value = test_point[var]
-                errors.append(true_value - round(pred, 1))
-            except Exception as e:
-                print(f"Skipped timestamp {timestamp} (error: {e})")
-                continue
-
-    mae = np.mean(np.abs(errors))
-    rmse = np.sqrt(np.mean(np.square(errors)))
-    return mae, rmse
-
-stations_info = pd.read_csv("data/clean/valais_stations.csv")
-valid_stations = stations_info[stations_info["precip_only"] == 0]["station"].unique().tolist()
 
 def prepare_data(df_var, target_time, var):
     """
@@ -66,7 +25,6 @@ def prepare_data(df_var, target_time, var):
     unknown_stations = unknown['station'].values
 
     return known_points, unknown_points, unknown_stations
-
 
 def ked_interpolation_gstools(known_points, unknown_points):
     """
@@ -154,6 +112,7 @@ def interpolate_time(df_var, var, time):
                 value = max(value, 0)
             elif var == 'moisture':
                 value = min(value, 100)
+                value = max(0, value)
 
             results.append({
                 'time': time,
@@ -171,9 +130,6 @@ def interpolate_variable(df, var, output_dir, position=0):
     df = df.copy()
     df['time'] = pd.to_datetime(df['time'])
     df_var = df[['time', 'station', 'east', 'north', 'altitude', var]].copy()
-
-    if var != 'precip':
-        df_var = df_var[df_var['station'].isin(valid_stations)]
 
     missing_times = df_var.loc[df_var[var].isna(), 'time'].drop_duplicates()
     results = []
@@ -224,7 +180,10 @@ def call_interpolate_variable(args):
 
 
 def run_interpolation_pipeline(timeseries_file, output_dir, variables):
-    df = pd.read_csv(timeseries_file, parse_dates=['time'])
+    stations_info = pd.read_csv("data/clean/valais_stations.csv")
+    station_filter = stations_info[['station', 'east', 'north', 'altitude']]
+    df_missing = pd.read_csv(timeseries_file, parse_dates=['time'])
+    df = df_missing.merge(station_filter, how='left', on='station')
     os.makedirs(output_dir, exist_ok=True)
 
     args = [(df, var, output_dir, i) for i, var in enumerate(variables)]
@@ -232,8 +191,8 @@ def run_interpolation_pipeline(timeseries_file, output_dir, variables):
 
 
 if __name__ == "__main__":
-    timeseries_file = 'data/filtered/merged_valais.csv'
-    output_dir = 'data/interpolated'
+    timeseries_file = 'data/interpolated/merged_interpol.csv'
+    output_dir = 'data/interpol'
     variables = ['temperature', 'precip', 'pression', 'moisture', 'North', 'East']
 
     run_interpolation_pipeline(timeseries_file, output_dir, variables)
