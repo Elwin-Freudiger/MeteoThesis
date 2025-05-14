@@ -34,4 +34,4 @@ df_hourly = (
     .reset_index()
 )
 
-print(df_hourly)
+df_hourly.to_csv('../data/clean/hourly_data.csv', index=False)
