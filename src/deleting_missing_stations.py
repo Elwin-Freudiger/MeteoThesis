@@ -15,9 +15,10 @@ def take_away(var, lame_stations, station_list):
 
 
 def main():
-    varlist = ["moisture", "precipitation", "pression", "temperature", "wind_vectors"]
+    other_vars = ["moisture", "precipitation", "pression", "temperature"]
+    varlist = ["wind_vectors"]
     lame_stations = ['DLALH', 'KSHIG', 'DLALM', 'PRE', 'AEG'] #stations only present in one variable
-    station_list = pd.read_csv("data/processed/stations.csv") #list of precipitation stations
+    station_list = pd.read_csv("data/clean/valais_stations.csv") #list of precipitation stations
 
     with ProcessPoolExecutor() as executor: #mutithreading 
         list(tqdm(executor.map(take_away, varlist, repeat(lame_stations), repeat(station_list)),

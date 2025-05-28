@@ -17,8 +17,8 @@ def main():
     df['direction_rad'] = np.deg2rad(df['wind_direction'])
 
     # Calculate North and East components
-    df['North'] = df['wind_speed'] * np.cos(df['direction_rad']).round(1)
-    df['East'] = df['wind_speed'] * np.sin(df['direction_rad']).round(1)
+    df['North'] = -(df['wind_speed'] * np.cos(df['direction_rad'])).round(1)
+    df['East'] = -(df['wind_speed'] * np.sin(df['direction_rad'])).round(1)
 
     # Drop the temporary radian column
     df.drop(columns=['direction_rad', 'wind_speed', 'wind_direction'], inplace=True)

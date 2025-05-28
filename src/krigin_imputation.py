@@ -191,9 +191,9 @@ def run_interpolation_pipeline(timeseries_file, output_dir, variables):
 
 
 if __name__ == "__main__":
-    timeseries_file = 'data/interpolated/merged_interpol.csv'
+    timeseries_file = 'data/interpolated/merged_mistake.csv'
     output_dir = 'data/interpol'
-    variables = ['temperature', 'precip', 'pression', 'moisture', 'North', 'East']
+    variables = ['North', 'East']
 
     run_interpolation_pipeline(timeseries_file, output_dir, variables)
 

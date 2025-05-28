@@ -15,6 +15,7 @@ from neuralforecast.models import KAN
 from neuralforecast.losses.pytorch import DistributionLoss
 from utilsforecast.evaluation import evaluate
 from utilsforecast.losses import mae, rmse, smape
+from utilsforecast.plotting import plot_series
 
 #get loader:
 logging.getLogger('pytorch_lightning').setLevel(logging.ERROR)
@@ -56,11 +57,11 @@ train_paths = [
     if d.startswith('unique_id=')
 ]
 
-horizon = 12
+horizon = 6
 input = 24
 models = [KAN(
-    h                = horizon*6,   
-    input_size       = input*6,  
+    h                = horizon,   
+    input_size       = input,  
     loss             = DistributionLoss("Poisson"),
     hist_exog_list   = ['temperature','pressure','moisture','east_wind','north_wind'],
     stat_exog_list   = ['east','north','altitude'],
@@ -79,58 +80,27 @@ nf.fit(
     id_col    = 'unique_id'
 )
 
-
-#Forecasting rainfall over the next timesteps
-
 # pick your station
 uid = 'BIN'
+h = 6
+input = 24
+ts  = valid_df[valid_df.unique_id == uid].sort_values('ds')
 
-h    = 72
-inp  = 144
+#make input window
+window = ts[:input]
 
-fut_grid = nf.make_future_dataframe(
-    df      = valid_df, 
-    h       = h,
-    id_col  = 'unique_id'
-)
-
-futr_df = (
-    fut_grid
-    .merge(
-        valid_df[['unique_id','ds',
-                  'temperature','pressure','moisture',
-                  'east_wind','north_wind']],
-        on = ['unique_id','ds'],
-        how= 'left'   # will give NaN if a covariate is missing
-    )
-)
-print(futr_df)
-pred_df = (
-    valid_df[valid_df.unique_id == uid]
-      .sort_values('ds')
-      .tail(inp)
-      .copy()
-)
 predictions = nf.predict(
-    df        = pred_df,
-    futr_df   = futr_df[futr_df.unique_id == uid],
-    static_df = static_df
+    df         = window,
+    static_df  = static_df
 )
 
 print(predictions)
-
-# prepare input window (last `inp` points) and future covariates (next `h`)
-pred_df = ts.tail(inp).copy()
-futr_df = (
-    ts
-    .tail(inp + h)
-    .head(h)
-    .drop(columns=['y'])
-    .copy()
-)
-
+fig = plot_series(window, predictions)
+fig.show()
+"""
 # get the predictions
 predictions = nf.predict(
+    df        = pred_df,
     futr_df   = futr_df,
     static_df = static_df
 )
@@ -152,3 +122,4 @@ plt.title(f'Actual vs Predicted Rainfall for {uid}')
 plt.legend()
 plt.tight_layout()
 plt.show()
+"""
