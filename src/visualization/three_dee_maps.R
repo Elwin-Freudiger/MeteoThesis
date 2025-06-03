@@ -3,6 +3,8 @@ library(rayshader)
 library(terra)
 library(bfsMaps)
 library(sf)
+library(grid)
+library(png)
 
 # Load raster
 raster <- rast("data/raw/altitude/DHM200.asc")
@@ -92,3 +94,86 @@ render_snapshot()
 
 
 #only plot Valais
+
+wind_vectors_filter <- read_csv("data/filtered/merged_valais.csv")
+# --- Load and process elevation raster ---
+raster <- rast("data/raw/altitude/DHM200.asc")
+crs(raster) <- "EPSG:21781"  # LV03
+
+# Reproject to LV95
+raster_95 <- project(raster, "EPSG:2056")
+
+# Load Valais canton border
+options(bfsMaps.base = "data/swiss_boundaries/mb-x-00.07.01.01-25/2025_GEOM_TK")
+valais_grenz <- GetMap("kant.map")
+valais_polygon <- valais_grenz %>% filter(name == "Valais")
+
+# Project polygon to raster CRS and crop/mask
+valais_proj <- st_transform(valais_polygon$geometry, crs(raster_95))
+valais_vect <- vect(valais_proj)
+
+valais_map <- raster_95 %>%
+  crop(valais_vect) %>%
+  mask(valais_vect)
+
+# Convert elevation raster to matrix
+elmat <- matrix(values(valais_map),
+                nrow = nrow(valais_map),
+                ncol = ncol(valais_map),
+                byrow = TRUE)
+
+elmat <- t(elmat)
+# flip columns (mirror on vertical axis)
+
+
+hillshade <- sphere_shade(elmat, texture = "imhof2", sunangle = 270)
+
+plot_map(hillshade)  # or use in 3D with plot_3d
+
+
+
+# Create shaded relief image
+hillshade <- sphere_shade(elmat, texture = "imhof2", sunangle = 270)
+
+# Get extent for ggplot overlay
+ext <- ext(valais_map)
+xmin <- ext[1]; xmax <- ext[2]
+ymin <- ext[3]; ymax <- ext[4]
+
+# --- Load and process wind vector data ---
+
+# Compute average wind per station and convert to LV95 points
+wind_summary <- wind_vectors_filter %>%
+  select(station, East, North, east, north) %>%
+  mutate(
+    easting = east + 2000000,
+    northing = north + 1000000
+  ) %>%
+  drop_na(North, East, easting, northing) %>%
+  group_by(station, easting, northing) %>%
+  summarise(
+    North = mean(North, na.rm = TRUE),
+    East = mean(East, na.rm = TRUE)
+  ) %>%
+  mutate(
+    angle = atan2(East, North),
+    magnitude = sqrt(North^2 + East^2)
+  ) %>%
+  ungroup()
+
+# --- Plot in ggplot over shaded relief with wind arrows ---
+ggplot() +
+  annotation_raster(
+    raster = hillshade,
+    xmin = xmin, xmax = xmax,
+    ymin = ymin, ymax = ymax
+  ) +
+  geom_spoke(
+    data = wind_summary,
+    aes(x = easting, y = northing, angle = angle, radius = 5000),
+    arrow = arrow(length = unit(0.2, "cm")),
+    color = "black", linewidth = 1.5
+  ) +
+  coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax)) +
+  theme_void() +
+  labs(title = "Wind Vectors over the Terrain of Valais")
