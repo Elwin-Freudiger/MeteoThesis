@@ -12,7 +12,6 @@ from functools import reduce
 from scipy.spatial.distance import pdist, squareform
 from statsmodels.tsa.seasonal import STL
 
-
 #precip = pd.read_csv("data/filtered/precipitation_filter.csv")
 #moisture = pd.read_csv("data/filtered/moisture_filter.csv")
 #pression = pd.read_csv("data/filtered/pression_filter.csv")

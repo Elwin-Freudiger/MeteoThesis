@@ -149,6 +149,7 @@ def interpolate_variable(df, var, output_dir, position=0):
                     value = max(value, 0)
                 elif var == 'moisture':
                     value = min(value, 100)
+                    value = max(value, 0)
 
                 results.append({
                     'time': t,

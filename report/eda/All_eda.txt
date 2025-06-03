@@ -1,0 +1,250 @@
+\graphicspath{ {./images/} }
+\subsection{Exploratory Data Analysis}
+
+
+%-------------------------------------------------
+% Descriptive statistics
+%-------------------------------------------------
+\subsection{Descriptive Statistics}
+
+\begin{table}
+\caption{Descriptive Statistics}
+\label{tab:desc_table}
+\begin{tabular}{lrrrrrrr}
+\toprule
+ & altitude & precip & moisture & pression & temperature & North & East \\
+\midrule
+mean & 1464.23 & 0.02 & 69.00 & 1018.37 & 7.96 & 0.19 & -0.14 \\
+std & 498.39 & 0.12 & 20.83 & 8.24 & 8.43 & 1.87 & 2.19 \\
+min & 461.00 & 0.00 & 4.40 & 976.70 & -24.70 & -17.80 & -20.20 \\
+25\% & 1204.25 & 0.00 & 52.80 & 1014.00 & 1.60 & -0.60 & -0.88 \\
+50\% & 1536.50 & 0.00 & 70.70 & 1019.30 & 7.60 & 0.09 & 0.00 \\
+75\% & 1849.50 & 0.00 & 87.60 & 1023.90 & 13.90 & 0.88 & 0.80 \\
+max & 2300.00 & 44.60 & 100.00 & 1044.90 & 38.00 & 17.50 & 14.60 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Precipitations}
+Regarding precipitations, the record of rain over 10 minutes was according to the data in Arolla (VS) with a total of 44.6 millimeters, this value seems unlikely as the record according to MeteoSwiss belongs to Lausanne on June 11, 2018 with a total of 41 mm. the top 3 spots are taken by Arolla, the second highest station is Emosson on July 21, 2020 with 22.6 millimeters in 10 minutes.
+
+Regarding the longest periods without any rain, table \ref{tab:dry_periods} shows the longest time without any amount of precipitation, with the top value in Ulrichen. registering more than a month without any rain.
+
+\begin{table}
+\centering
+\caption{Top 5 Longest Dry Periods}
+\label{tab:dry_periods}
+\begin{tabular}{llrrrr}
+\toprule
+station & name & start date  & count \\
+\midrule
+ULR  & Ulrichen & 2020-03-13 01:50 & 5424 \\
+VSSAB  & Saas Balen & 2022-02-22 08:40 & 5314 \\
+MAB  & Martigny & 2020-03-20 18:20 & 5307 \\
+ZER  & Zermatt & 2022-02-21 19:40 & 5249 \\
+SIO  & Sion & 2023-01-18 01:30 & 5183 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The station that recorded the highest amount of precipitation was Clusanfe (VSCLU), with a total of \textbf{11352.8 mm}. Over the course of 5 years between 2019 and 2024, meaning that the station receives on average \textbf{6.2 millimeters } of rain per day. 
+The station itself is located at 1928 meters above sea level. 
+
+The station with the least amount of rainfall over 5 years is Mattsand (VSMAT) with a total of \textbf{2672.7 mm}.
+located in the Mattertal at an altitude of 1230 meters, this station is a good example of the dry climate of the valleys of Valais\footnote{For more information, visit: \textit{MeteoSwiss, The Climate of Switzerland}, \url{https://www.meteoswiss.admin.ch/climate/the-climate-of-switzerland.html}, accessed May 19, 2025.}, which receive less precipitation by being protected from humid air masses from the north and south~\cite{zumbrunnen2009linking}.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics[width=0.8\textwidth]{VSCLU-image.jpg}
+  \end{subfigure}
+  \vspace{1em}
+  \begin{subfigure}{\textwidth}
+    \centering
+\includegraphics[width=0.8\textwidth]{VSMAT-image.jpg}
+  \end{subfigure}
+  \caption{Photograph of the stations of Clusanfe (Top) and Mattsand (Bottom)}
+  \label{fig:VSCLU_VSMAT}
+\end{figure}
+
+\paragraph{Temperature}
+Temperature highly influences precipitations, with warmer air being able to hold more moisture\footnote{National Oceanic and Atmospheric Administration:\url{https://www.ncei.noaa.gov/news/warming-earth-also-wetter-earth}, accessed May 19, 2025.}.
+
+The analysis of temperature data also yields interesting insights into the overall climate in Valais. 
+Regarding temperature records, the highest temperature recorded was \textbf{38°C} in Sion on July 24, 2019. The second highest temperature is also in Sion in 2023, with \textbf{37.6°C}. In fact, the first 50 hottest temperatures recorded are all in Sion, the next hottest station is in Martigny which recorded \textbf{36.5°C} on August 24, 2023. These high temperatures located in the hearth of the Valley gives a good idea of mean temperatures around Switzerland. 
+
+The lowest temperatures are consistently recorded in Ulrichen (ULR) with the lowest value being \textbf{-24.7} degrees. The second lowest recorded temperature is "only" \textbf{-19.8°C} in Turtmann (VSTUR) a station located at 2180 m. 
+
+The average temperature per station can also be computed, and plotted against the temperature. Figure \ref{fig:avg_temp_vs_alt} shows the relationship between the altitude and average temperatures, there is a clear negative correlation. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images//other_vars/avg_temp_vs_alt.pdf}
+    \caption{Plotting the Average Temperature per station over the course of 5 years against the Altitude. A clear negative correlation of $-0.94$ can be observed}
+    \label{fig:avg_temp_vs_alt}
+\end{figure}
+
+\paragraph{Daily Temperatures} 
+Daily temperatures are an extremely powerful tool from which multiple indicators of weather can be derived. Average Values over the selected period of 5 years can be found in the Appendix~\ref{appendix:temperature}.
+
+An indicator used in summer is summer days, meaning days during which the max temperature goes above 25°C. Unsurprisingly, Sion takes the lead with a total of \textbf{464} days or an average of 92.8 days by year. Evolène, a station located at 1825 meters has the least amount of summer days with only 31 of them going above 25°C. Other special days by station can be observed in Fig.~\ref{fig:special_days_heatmap}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\linewidth]{images//other_vars/special_days_heatmap.pdf}
+    \caption{Special days count for each station over the course of 5 years, special days include: summer days ($Tmax >= 25\degree$), hot days ($Tmax >= 30\degree$), tropical nights ($Tmin >= 20\degree$), heating days ($Tmean <= 12\degree$), frost days ($Tmin < 0\degree$), ice days ($Tmax < 0\degree$)}
+    \label{fig:special_days_heatmap}
+\end{figure}
+
+\paragraph{Wind}
+
+Wind as a variable can be somewhat unpredictable, especially in complex terrain such as the Alps. Foehn events, consisting of wind gusts of up to 100 km/h and sometimes 200 km/h at high altitudes, are particularly unpredictable and their causes are poorly understood~\cite{aichinger2022machine}. Wind hazard can also be of concern.
+
+The data available consists of averages of wind over 10 minutes, therefore, wind gusts are not considered.
+
+Looking at the average wind direction and speed displayed in Fig. \ref{fig:wind_mean}
+show more information regarding the types of wind that predominate in the Valais region. In Switzerland, three main winds dominate, Westerly winds, Foehn which usually comes from the south and Bise which usually comes from the North~\cite{jungo2002daily}.
+While most stations follow this Pattern of Winds coming from the south, some stations show a different pattern. Indeed, Visp (VIS) and Sion (SIO) exhibit Easterly winds. Both of these are located at lower altitudes in the rhone valley which may explain this difference. The station of Mottec (MOT) also exhibits a southerly wind, this is due to the high altitude of the mountain pass at the end of Matterhorn valley, making wind usually come from the next valley, Saas-fee\footnote{MeteoSwiss Blog, \textit{Foehn dans le Haut-Valais (French only)}, available at \url{https://www.meteosuisse.admin.ch/portrait/meteosuisse-blog/fr/2023/10/foehnhautvalais.html}, accessed May 22, 2025.}.
+
+The highest average wind speed was recorded in 2019 in Visp, with a mean speed of 21 m/s over 10 minutes. Meaning that the average speed was up to 75 km/h with wind gusts potentially twice as much.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images//other_vars/wind_direction.pdf}
+    \caption{Average wind direction and speed. Southerly winds dominate in Valais}
+    \label{fig:wind_mean}
+\end{figure}
+
+
+
+\paragraph{Humidity}
+
+
+
+\paragraph{Pressure}
+
+Pressure is also a valuable indicator of rainfall. Indeed, the literature shows that low-pressure systems tend to be associated with cloud formation and precipitation~\cite{pearce2002meteorology}.Understanding variations in pressure is therefore essential.
+
+To recall, atmospheric pressure corresponds to the weight of the air column above a point on Earth. 
+
+Across stations and over time, pressure remains relatively stable. This is clear from the aggregated data: the average sea-level pressure observed was $1018.38~hPa$, with a variance of just $67.4~hPa$.
+The low variance and stability across station will be of great help when interpolating missing values, giving us reassurance that the interpolated values will still remain close to the reality.
+
+Regarding extreme values, the lowest pressures recorded at each station—shown in Table~\ref{tab:station_pres_min} are linked to two distinct events. One occurred in December 2020, when a depression above Scotland led to widespread low-pressure readings~\footnote{MeteoSwiss, \textit{Weather in December 2020 (French only)}, available at \url{https://www.meteosuisse.admin.ch/dam/jcr:ebb31915-b85a-41e2-8c7e-badec7b381da/202012_f.pdf}, accessed May 21, 2025.}. The second event, which recorded the lowest pressure in the entire dataset, took place in October 2023. It was caused by Storm Céline, which brought warm air masses, triggered Foehn winds, and resulted in heavy precipitation~\footnote{MeteoSwiss Blog, \textit{Mise à jour – Avis précipitations, foehn tempétueux (French only)}, available at \url{https://www.meteosuisse.admin.ch/portrait/meteosuisse-blog/fr/2023/10/mise-a-jour-avis-precipitations-foehn-tempetueux.html}, accessed May 21, 2025.}.
+
+\begin{table}
+\centering
+    \begin{tabular}{rlr}
+    \toprule
+    Date & Station & Pressure (hPa) \\
+    \midrule
+    2023-10-20 & EVI & 976.7 \\
+    2023-10-20 & SIO & 979.4 \\
+    2020-12-28 & EVO & 979.4 \\
+    2020-12-28 & ZER & 979.9 \\
+    2020-12-28 & MTE & 980.1 \\
+    2020-12-28 & GRC & 980.3 \\
+    2020-12-28 & BLA & 980.7 \\
+    2020-12-28 & SIM & 980.7 \\
+    2020-12-28 & MVE & 980.8 \\
+    2020-12-28 & ULR & 980.9 \\
+    2023-10-20 & MOB & 982.0 \\
+    2020-12-28 & VIS & 982.8 \\
+    \bottomrule
+    \end{tabular}
+\caption{Minimum sea-level pressure values recorded per station}
+\label{tab:station_pres_min}
+\end{table}
+
+In conclusion, atmospheric pressure is a stable and informative variable that plays a key role in understanding weather events. It should not be overlooked in modeling efforts.
+
+
+
+
+
+
+
+
+
+
+\subsection{Time series}
+This section explores the various timeseries involved in the data. Figure
+\ref{fig:all_vars_sion} displays all of the timeseries involved for the Station of Sion. In red, the monthly average for the variable can be observed, regarding precipitation, unsurprisingly, the average precipitation over a month is often close to zero, highlighting the sparse nature of the serie and the difficulty that may be encountered when trying to predict rainfall. While it may be unclear concerning rainfall, all other variable seem to exhibit some seasonality.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{timeseries/all_vars_sion.pdf}
+    \caption{Graph displaying the evolution of several available variables. With in red a monthly average of the variable.}
+    \label{fig:all_vars_sion}
+\end{figure}
+
+Regarding precipitations, figure \ref{fig:valais_stations_ts} displays precipitation for 5 stations in Valais. As can be seen, seasonality plays a role, with some periods seeing higher precipitation rates while the rest of the year sees intermittent rain. These stations were selected to represent a diverse outlook over Valais, with some stations in city centers in the Valley such as Sion, Sierre, Visp as well as famous points of interest in the mountains, displaying the effect of the complex topography. Derborence, a mountain lake nested between the mountains shows what precipitation may look like in a remote location, while Zermatt, a famous ski resort town displays rainfall in a region used to a colder climate. Overall, these stations are diverse while being recognizable for most readers.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{images//timeseries/valais_stations_ts.pdf}
+    \caption{Bar graph representing 10 minute rainfall totals over 5 selected stations}
+    \label{fig:valais_stations_ts}
+\end{figure}
+
+Figure \ref{fig:cumsum_valais_ts} displays the cumulative sums of rain across the same stations. As can be seen, differences in rainfall totals exist in particular for Derborence which received substantially more rainfall than other stations. All three stations in the valley display a similar amount of rainfall, indicating that the climate may be similar in the Valley of Valais. While being slightly higher than stations in the Valley, Zermatt has a surprisingly low amount of precipitation. Further research will be needed to understand how each station receives precipitation.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{images//timeseries/cumsum_valais_ts.pdf}
+    \caption{Graph displaying the cumulative precipitation over the studied period.}
+    \label{fig:cumsum_valais_ts}
+\end{figure}
+
+Lastly, figure \ref{fig:cumsum_quarter_sion} further highlights the seasonal nature of the data. It also displays the difference between years regarding precipitation totals. For example, in 2023, for the last three months of the year, rainfall was much higher than the rest of the years. This also highlights the difficulty in predicting rainfall as it can change a lot depending on the year.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{images//timeseries/cumsum_quarter_sion.pdf}
+    \caption{This graph shows the cumulative precipitation totals for each quarter per year}
+    \label{fig:cumsum_quarter_sion}
+\end{figure}
+
+\subsection{Correlation matrices}
+Two types of matrices can be extracted from the data. The first matrix \ref{fig:corr_sion} which shows the correlations between variables for the city of Sion. Several correlations can be observed, the highest correlation is between the two wind vectors, this is unsurprising. It is worth mentioning that the relationship is positive, meaning that wind tends to blow along a northeast-southwest axis. Indeed, if the Eastern vector grows, so will the northern one, leading to wind in the northeastern quadrant.
+Moisture also has a correlation with wind, this has been discussed in other studies which suggest that while other factors influence this relationship, it is generally believed that wind speed has a low relationship with humidity~\cite{zakaria2020analysis}. 
+Moisture is also negatively correlated with Temperature.
+One very interesting relationship is the one between pressure and temperature. Indeed, the relationship should be positive as lower pressures mean worse weather, but the opposite is observed.
+The relationship between wind and temperature, show why simple correlations are to take with a grain of salt. Indeed, the temperature here is not the Wind chill temperature (temperature adjusted for windy conditions). Therefore, the impact cannot be directly attributed to this. Instead, the relationship is not direct but rather influenced by other variables.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images//timeseries/correlation_matrix_sion.pdf}
+    \caption{Enter Caption}
+    \label{fig:corr_sion}
+\end{figure}
+
+Another correlation matrix \ref{fig:corr_precip} can help with the understanding of how each station is related in terms of precipitation. In this case, stations in Valais are selected, one insight that may appear is that closer stations tend to have a higher correlation. Such as Evolène (EVO) in the Val d'Hérens and Mottec (MTE) in the Val d'Anniviers two stations in valleys only separated by 10 kilometers.  
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images//timeseries/correlation_matrix_valais.pdf}
+    \caption{Enter Caption}
+    \label{fig:corr_precip}
+\end{figure}
+
+Figure \ref{fig:scatter_dist_corr} a scatter plot shows the behavior of the correlation compared to the distance of between two stations. As can be seen, while some observations do have a higher correlation, no trend can be observed. This suggests that the weather tends to be similar in the whole region.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images//timeseries/scatter_distance_corr_valais.pdf}
+    \caption{Scatter plot with the distance between pairs of station and their correlation}
+    \label{fig:scatter_dist_corr}
+\end{figure}
+
+
+Lastly, Figure \ref{fig:sum_precip_alt} shows the altitude compared to the total of precipitations over the period can be plotted. Indeed, there appears to be a slight positive relationship, suggesting that mountainous regions receive more precipitation than the Plateau.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images//timeseries/sum_precip_altitude_vs.pdf}
+    \caption{Scatterplot displaying the relationship between total rainfall amounts over the whole period and altitude in meters}
+    \label{fig:sum_precip_alt}
+\end{figure}
