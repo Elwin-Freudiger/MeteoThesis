@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 
 
-def prepare_data(df_var, target_time, var):
+def prepare_data(df_var, target_time, var, drift):
     """
     Extract known and unknown points for a given time and variable.
     """
@@ -20,8 +20,8 @@ def prepare_data(df_var, target_time, var):
     if len(known) == 0 or len(unknown) == 0:
         return None, None, None
 
-    known_points = known[['east', 'north', 'altitude', var]].values
-    unknown_points = unknown[['east', 'north', 'altitude']].values
+    known_points = known[['east', 'north', drift, var]].values
+    unknown_points = unknown[['east', 'north', drift]].values
     unknown_stations = unknown['station'].values
 
     return known_points, unknown_points, unknown_stations
@@ -126,10 +126,10 @@ def interpolate_time(df_var, var, time):
 
     return results
 
-def interpolate_variable(df, var, output_dir, position=0):
+def interpolate_variable(df, var, drift, output_dir, position=0):
     df = df.copy()
     df['time'] = pd.to_datetime(df['time'])
-    df_var = df[['time', 'station', 'east', 'north', 'altitude', var]].copy()
+    df_var = df[['time', 'station', 'east', 'north', drift, var]].copy()
 
     missing_times = df_var.loc[df_var[var].isna(), 'time'].drop_duplicates()
     results = []
@@ -180,9 +180,9 @@ def call_interpolate_variable(args):
     return interpolate_variable(*args)
 
 
-def run_interpolation_pipeline(timeseries_file, output_dir, variables):
+def run_interpolation_pipeline(timeseries_file, output_dir, variables, drift):
     stations_info = pd.read_csv("data/clean/valais_stations.csv")
-    station_filter = stations_info[['station', 'east', 'north', 'altitude']]
+    station_filter = stations_info[['station', 'east', 'north', drift]]
     df_missing = pd.read_csv(timeseries_file, parse_dates=['time'])
     df = df_missing.merge(station_filter, how='left', on='station')
     os.makedirs(output_dir, exist_ok=True)

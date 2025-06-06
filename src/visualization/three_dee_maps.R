@@ -126,14 +126,14 @@ elmat <- t(elmat)
 # flip columns (mirror on vertical axis)
 
 
-hillshade <- sphere_shade(elmat, texture = "imhof2", sunangle = 270)
+hillshade <- sphere_shade(elmat, texture = "desert", sunangle = 0)
 
 plot_map(hillshade)  # or use in 3D with plot_3d
 
 
 
 # Create shaded relief image
-hillshade <- sphere_shade(elmat, texture = "imhof2", sunangle = 270)
+hillshade <- sphere_shade(elmat, texture = "desert", sunangle = 0)
 
 # Get extent for ggplot overlay
 ext <- ext(valais_map)
@@ -161,19 +161,39 @@ wind_summary <- wind_vectors_filter %>%
   ) %>%
   ungroup()
 
-# --- Plot in ggplot over shaded relief with wind arrows ---
+arrow_length <-  5000
+wind_summary <- wind_summary %>%
+  mutate(
+    xend = easting + arrow_length * sin(angle),  # East is X axis
+    yend = northing + arrow_length * cos(angle)  # North is Y axis
+  )
+
 ggplot() +
   annotation_raster(
     raster = hillshade,
     xmin = xmin, xmax = xmax,
     ymin = ymin, ymax = ymax
   ) +
-  geom_spoke(
+  # Arrows: white fill
+  geom_segment(
     data = wind_summary,
-    aes(x = easting, y = northing, angle = angle, radius = 5000),
+    aes(x = easting, y = northing, xend = xend, yend = yend),
     arrow = arrow(length = unit(0.2, "cm")),
-    color = "black", linewidth = 1.5
+    color = "black", linewidth = 1.2
+  ) +
+  # Station labels, non-overlapping
+  geom_text_repel(
+    data = wind_summary,
+    aes(x = easting, y = northing, label = station),
+    size = 3,
+    color = "black",
+    box.padding = 0.3,
+    point.padding = 0.5,
+    segment.color = "black"
   ) +
   coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax)) +
-  theme_void() +
-  labs(title = "Wind Vectors over the Terrain of Valais")
+  theme_void()
+
+
+
+
