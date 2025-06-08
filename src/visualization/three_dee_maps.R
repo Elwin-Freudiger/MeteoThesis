@@ -5,6 +5,7 @@ library(bfsMaps)
 library(sf)
 library(grid)
 library(png)
+library(raster)
 
 # Load raster
 raster <- rast("data/raw/altitude/DHM200.asc")
@@ -115,6 +116,8 @@ valais_vect <- vect(valais_proj)
 valais_map <- raster_95 %>%
   crop(valais_vect) %>%
   mask(valais_vect)
+
+writeRaster(valais_map, "data/clean/valais_elevation.asc", overwrite = TRUE)
 
 # Convert elevation raster to matrix
 elmat <- matrix(values(valais_map),

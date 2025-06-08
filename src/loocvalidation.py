@@ -118,7 +118,7 @@ def main_wind():
     print(f"Speed (recombined):  MAE = {mae_vec:.3f}, RMSE = {rmse_vec:.3f}")
 
 def main():
-    var = 'pression'
+    var = 'North'
     drift = 'altitude'
     df = pd.read_csv('data/filtered/merged_valais.csv')
 
@@ -127,7 +127,7 @@ def main():
 
 
 def main_humidity():
-    var = 'moisture'
+    var = 'East'
     drift = 'temp_drift'
     df = pd.read_csv('data/filtered/merged_valais.csv')
     df_temp = pd.read_csv('data/clean/valais_clean.csv')
@@ -138,4 +138,4 @@ def main_humidity():
     print(f"For {var} using drift '{drift}', MAE: {mae:.3f}, RMSE: {rmse:.3f}")
 
 if __name__ == "__main__":
-    main_humidity()
+    main()
