@@ -13,7 +13,10 @@ def merge_sort(var):
         df = pd.read_csv('data/interpolated/precip_interpolated.csv', dtype={col:float})
     else:
         df = pd.read_csv(f'data/interpol/{var}_interpolated.csv', dtype={col: float})
-    df_filter = df.drop(columns=['east', 'north', 'altitude'])
+    if var in ['East', 'North']:
+        df_filter = df.drop(columns=['east', 'north', 'wind_speed'])
+    else:
+        df_filter = df.drop(columns=['east', 'north', 'altitude'])
     df_filter['time'] = df_filter['time'].str.replace('-|:|\\s{1}', '', regex=True)
     df_filter['time'] = df_filter['time'].str.slice(stop=12)
     df_filter[col] = df_filter[col].fillna(False)

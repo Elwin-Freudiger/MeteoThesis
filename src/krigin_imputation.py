@@ -33,7 +33,6 @@ def ked_interpolation_gstools(known_points, unknown_points):
     x_known, y_known, z_known = known_points[:, 0], known_points[:, 1], known_points[:, 2]
     values = known_points[:, 3]
     x_unknown, y_unknown, z_unknown = unknown_points[:, 0], unknown_points[:, 1], unknown_points[:, 2]
-
     if np.all(values == 0):
         return np.zeros(len(unknown_points))
 
@@ -43,7 +42,7 @@ def ked_interpolation_gstools(known_points, unknown_points):
         bin_edges=np.linspace(0, 100000, 15)
     )
 
-    model = gs.Spherical(dim=2)
+    model = gs.Exponential(dim=2)
     model.fit_variogram(bin_center, gamma)
 
     ked = gs.krige.ExtDrift(
@@ -94,9 +93,9 @@ def ked_interpolation_gstools_fixed(known_points, unknown_points):
 
     return predictions
 
-def interpolate_time(df_var, var, time):
+def interpolate_time(df_var, var, drift, time):
     results = []
-    known_points, unknown_points, unknown_stations = prepare_data(df_var, time, var)
+    known_points, unknown_points, unknown_stations = prepare_data(df_var, time, var, drift)
 
     if known_points is None or len(known_points) < 5:
         return results
@@ -127,7 +126,6 @@ def interpolate_time(df_var, var, time):
     return results
 
 def interpolate_variable(df, var, drift, output_dir, position=0):
-    df = df.copy()
     df['time'] = pd.to_datetime(df['time'])
     df_var = df[['time', 'station', 'east', 'north', drift, var]].copy()
 
@@ -135,7 +133,7 @@ def interpolate_variable(df, var, drift, output_dir, position=0):
     results = []
 
     for t in tqdm(missing_times, desc=f'Interpolating {var}', position=position, leave=True):
-        known_points, unknown_points, unknown_stations = prepare_data(df_var, t, var)
+        known_points, unknown_points, unknown_stations = prepare_data(df_var, t, var, drift=drift)
 
         if known_points is None or len(known_points) < 5:
             continue
@@ -180,30 +178,35 @@ def call_interpolate_variable(args):
     return interpolate_variable(*args)
 
 
-def run_interpolation_pipeline(timeseries_file, output_dir, variables, drift):
-    stations_info = pd.read_csv("data/clean/valais_stations.csv")
-    station_filter = stations_info[['station', 'east', 'north', drift]]
+def run_interpolation_pipeline(timeseries_file, output_dir, variables):
+    stations_info = pd.read_csv("data/clean/stations_with_wind_speed.csv")
+    station_filter = stations_info[['station', 'east', 'north', 'altitude', 'wind_speed']]
     df_missing = pd.read_csv(timeseries_file, parse_dates=['time'])
     df = df_missing.merge(station_filter, how='left', on='station')
     os.makedirs(output_dir, exist_ok=True)
 
-    args = [(df, var, output_dir, i) for i, var in enumerate(variables)]
-    process_map(call_interpolate_variable, args, max_workers=os.cpu_count(), desc="Variables")
+    args = []
+    for i, var in enumerate(variables):
+        # choose drift per variable
+        if var == 'pression':
+            drift = 'altitude'
+        elif var in ['East', 'North']:
+            drift = 'wind_speed'
+        else:
+            raise ValueError(f"No drift defined for variable {var}")
 
+        # now pass (df, var, drift, output_dir, position)
+        args.append((df, var, drift, output_dir, i))
+
+    process_map(
+        call_interpolate_variable,
+        args,
+        max_workers=os.cpu_count(),
+        desc="Variables"
+    )
 
 if __name__ == "__main__":
-    timeseries_file = 'data/interpolated/merged_mistake.csv'
+    timeseries_file = 'data/interpolated/merged_interpol_pressure_wind.csv'
     output_dir = 'data/interpol'
-    variables = ['North', 'East']
-
+    variables = ['pression', 'North', 'East']
     run_interpolation_pipeline(timeseries_file, output_dir, variables)
-
-    
-    """
-    
-    timeseries_file = 'data/filtered/merged_valais.csv'
-    df = pd.read_csv(timeseries_file)
-    mae, rmse = leave_one_out(df, 'precip', end_date=pd.to_datetime('2019-01-31 23:50'))
-    print(f'Mean Absolute Error is: {mae}')
-    print(f'Root Mean Square Error is: {rmse}')
-    """  

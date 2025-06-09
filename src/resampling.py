@@ -4,7 +4,7 @@ import pandas as pd
 import logging
 import tempfile
 
-df_start = pd.read_csv('../data/clean/valais_clean.csv')
+df_start = pd.read_csv('data/clean/valais_clean.csv')
 
 df_start['ds'] = pd.to_datetime(df_start['time'], format='%Y%m%d%H%M')
 df_start = df_start.rename(columns={
@@ -34,4 +34,4 @@ df_hourly = (
     .reset_index()
 )
 
-df_hourly.to_csv('../data/clean/hourly_data.csv', index=False)
+df_hourly.to_csv('data/clean/hourly_data.csv', index=False)

@@ -122,7 +122,7 @@ def main():
     drift = 'altitude'
     df = pd.read_csv('data/filtered/merged_valais.csv')
 
-    mae, rmse, _, _ = leave_one_out_kriging(df, var=var, drift=drift, n=100)
+    mae, rmse, _, _ = leave_one_out_kriging(df, var=var, drift=drift, n=5)
     print(f"For {var} using drift '{drift}', MAE: {mae:.3f}, RMSE: {rmse:.3f}")
 
 
@@ -134,7 +134,7 @@ def main_humidity():
     df_temp['temp_drift'] = df_temp['temperature']
     df = df.merge(df_temp[['station', 'time', 'temp_drift']], on=['station', 'time'], how='left')
 
-    mae, rmse, _, _ = leave_one_out_kriging(df, var=var, drift=drift, n=100)
+    mae, rmse, _, _ = leave_one_out_kriging(df, var=var, drift=drift, n=5)
     print(f"For {var} using drift '{drift}', MAE: {mae:.3f}, RMSE: {rmse:.3f}")
 
 if __name__ == "__main__":
