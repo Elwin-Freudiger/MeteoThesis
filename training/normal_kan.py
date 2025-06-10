@@ -19,11 +19,11 @@ from utilsforecast.losses import mae, rmse, smape
 logging.getLogger('pytorch_lightning').setLevel(logging.ERROR)
 
 # 2) Load data
-df_hourly = pd.read_csv('../data/clean/hourly_data.csv')
+df_hourly = pd.read_csv('data/clean/hourly_data.csv')
 df_hourly['ds'] = pd.to_datetime(df_hourly['ds'])
 
 static_df = (
-    pd.read_csv('../data/clean/valais_stations.csv')
+    pd.read_csv('data/clean/valais_stations.csv')
       .rename(columns={'station': 'unique_id'})
       [['unique_id', 'altitude', 'east', 'north']]
 )
@@ -43,7 +43,7 @@ valid_df[feature_cols] = scaler.transform(valid_df[feature_cols])
 joblib.dump(scaler, 'valais_scaler.pkl')
 
 # 5) Partition train set into parquet by unique_id
-parquet_dir = '../data/valais_train_parquet'
+parquet_dir = 'data/valais_train_parquet'
 if os.path.exists(parquet_dir):
     shutil.rmtree(parquet_dir)
 
@@ -70,7 +70,7 @@ models = [
         loss             = DistributionLoss("Poisson"),
         hist_exog_list   = feature_cols,
         stat_exog_list   = ['east','north','altitude'],
-        max_steps        = 20
+        max_steps        = 1000
     )
 ]
 
@@ -85,6 +85,11 @@ nf.fit(
     static_df  = static_df,
     id_col     = 'unique_id'
 )
+
+nf.save(path='../checkpoints/hourly',
+        model_index=None, 
+        overwrite=True,
+        save_dataset=False)
 
 # 8) Single‐window cross‐validation (n_windows=1)
 cv_df = nf.cross_validation(
@@ -110,56 +115,3 @@ print(evaluation_df.to_string(index=False))
 # Optional: pivot for a compact overview
 summary = evaluation_df.pivot(index='metric', columns='unique_id', values='KAN')
 print("\nAggregated by metric:\n", summary)
-
-
-# --- 1) metric definitions in pandas/numpy ---
-def mae_pandas(y_true, y_pred):
-    return np.mean(np.abs(y_true - y_pred))
-
-def rmse_pandas(y_true, y_pred):
-    return np.sqrt(np.mean((y_true - y_pred) ** 2))
-
-def smape_pandas(y_true, y_pred):
-    # avoid division by zero
-    denom = np.abs(y_true) + np.abs(y_pred)
-    safe_denom = np.where(denom == 0, 1e-8, denom)
-    return np.mean(2 * np.abs(y_pred - y_true) / safe_denom) * 100
-
-# --- 2) rolling‐window forecast on validation set for one station ---
-uid         = 'BIN'         # change to your station
-input_size  = 24            # same as model input_size
-horizon     = 6             # same as model h
-ts_full     = valid_df[valid_df.unique_id == uid] \
-                  .sort_values('ds') \
-                  .reset_index(drop=True)
-
-predictions = []
-for start in range(0, len(ts_full) - input_size, horizon):
-    # history window
-    window = ts_full.iloc[start : start + input_size].copy()
-    # forecast horizon
-    pred = nf.predict(
-        df        = window,
-        static_df = static_df
-    )
-    predictions.append(pred)
-
-# concatenate and drop any duplicates
-pred_df = pd.concat(predictions, ignore_index=True)
-pred_df = pred_df.drop_duplicates(subset=['ds'])
-
-# --- 3) merge and compute metrics ---
-eval_df = ts_full.merge(
-    pred_df[['ds','KAN']],  # model name as column
-    on='ds', how='inner'
-)
-
-metrics = {
-    'MAE':  mae_pandas(eval_df['y'],  eval_df['KAN']),
-    'RMSE': rmse_pandas(eval_df['y'], eval_df['KAN']),
-    'sMAPE': smape_pandas(eval_df['y'], eval_df['KAN']),
-}
-
-print(f"Validation metrics for station {uid}:")
-for name, val in metrics.items():
-    print(f"  {name}: {val:.4f}")
