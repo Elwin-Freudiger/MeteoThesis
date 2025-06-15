@@ -107,7 +107,7 @@ evaluation_df = evaluate(
     cv_df.drop(columns=['cutoff']),
     metrics = [mae, rmse, smape]
 )
-
+ 
 # 10) Print results
 print("\nCross‐validation metrics (single window):\n")
 print(evaluation_df.to_string(index=False))

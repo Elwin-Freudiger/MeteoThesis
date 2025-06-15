@@ -55,7 +55,7 @@ class WeightedPoissonLoss(DistributionLoss):
         # 4) apply
         return base_w * factor
     
-class KANCustomWindows(KAN):
+class KAN(KAN):
     def __init__(self, *args, zero_keep_prob=0.1, **kwargs):
         super().__init__(*args, **kwargs)
         self.zero_keep_prob = zero_keep_prob
@@ -229,7 +229,6 @@ class KANCustomWindows(KAN):
         else:
             raise ValueError(f"Unknown step {step}")
 
-
 # 2) Load data
 df_hourly = pd.read_csv('../data/clean/hourly_data.csv')
 df_hourly['ds'] = pd.to_datetime(df_hourly['ds'])
@@ -273,24 +272,25 @@ train_paths = [
 
 # 6) Model definition
 horizon    = 6
-input_size = 24
+input_size = 48
 
 models = [
-    KANCustomWindows(
+    KAN(
         h                = horizon,
         input_size       = input_size,
-        loss             = WeightedPoissonLoss(pos_weight=10.0),
+        loss             = WeightedPoissonLoss(pos_weight=20.0),
         hist_exog_list   = feature_cols,
         stat_exog_list   = ['east','north','altitude'],
-        windows_batch_size= 8,
-        max_steps        = 10,
-        zero_keep_prob   = 0.1,   
+        windows_batch_size= 32,
+        grid_size = 20,
+        max_steps        = 1000,
+        zero_keep_prob   = 0.05
     )
 ]
 
 nf = NeuralForecast(
     models = models,
-    freq   = '10min'
+    freq   = 'h'
 )
 
 # 7) Fit on parquet partitions
@@ -300,28 +300,14 @@ nf.fit(
     id_col     = 'unique_id'
 )
 
-nf.save(path='../checkpoints/balanced_ts',
-        model_index=None, 
-        overwrite=True,
-        save_dataset=False)
-
-# 8) Single‐window cross‐validation (n_windows=1)
 cv_df = nf.cross_validation(
-    df         = train_df,
-    static_df  = static_df,
-    id_col     = 'unique_id',
-    n_windows  = 1,
-    step_size  = horizon,
-    verbose    = False
+    df = valid_df,
+    static_df = static_df,
+    id_col = 'unique_id',
+    n_windows = 200,
+    step_size = horizon,
+    verbose = True
 )
+print(cv_df)
 
-# 9) Compute MAE, RMSE, sMAPE over that test window
-#    drop 'cutoff' column before evaluation
-evaluation_df = evaluate(
-    cv_df.drop(columns=['cutoff']),
-    metrics = [mae, rmse, smape]
-)
-
-# 10) Print results
-print("\nCross‐validation metrics (single window):\n")
-print(evaluation_df.to_string(index=False))
+print(cv_df[cv_df['KAN']!=0])
