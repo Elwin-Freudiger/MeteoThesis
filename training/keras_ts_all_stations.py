@@ -51,7 +51,7 @@ num_stations = len(precip_cols)
 
 for i in range(HIST_LEN, len(data_scaled) - HORIZON):
     x_window = data_scaled.iloc[i - HIST_LEN:i].values
-    y_window = df_pivot.iloc[i + HORIZON][precip_cols].values  # unscaled precip for all stations
+    y_window = df_pivot.iloc[i][precip_cols].values  # unscaled precip for all stations
 
     total_future_rain = np.sum(y_window)
 
@@ -100,4 +100,4 @@ model.fit(
     callbacks=[EarlyStopping(patience=5, restore_best_weights=True)]
 )
 
-model.save("../model_testing/forecast_allstation_lstm_kan.keras")
+model.save("../model_testing/final_one_step_fcst.keras")
