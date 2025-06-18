@@ -38,38 +38,63 @@ df_pivot.columns = [f"{feat}_{station}" for feat, station in df_pivot.columns]
 df_pivot = df_pivot.sort_index()
 df_pivot = df_pivot.dropna()  
 
-# ── SCALING ───────────────────────────────
+
+# ── SPLITTING RAW TIME INDEX ─────────────────────────
+split1 = int(0.6 * len(df_pivot))  # train
+split2 = int(0.8 * len(df_pivot))  # val
+df_train = df_pivot.iloc[:split1]
+df_val   = df_pivot.iloc[split1:split2]
+df_test  = df_pivot.iloc[split2:]
+
+# ── SCALING ──────────────────────────────────────────
 scaler = StandardScaler()
-data_scaled = scaler.fit_transform(df_pivot)
-data_scaled = pd.DataFrame(data_scaled, columns=df_pivot.columns, index=df_pivot.index)
+data_train = scaler.fit_transform(df_train)
+data_val   = scaler.transform(df_val)
+data_test  = scaler.transform(df_test)
 
-# ── SAMPLE CONSTRUCTION ───────────────────
-x, y = [], []
+data_train = pd.DataFrame(data_train, columns=df_train.columns, index=df_train.index)
+data_val   = pd.DataFrame(data_val,   columns=df_val.columns,   index=df_val.index)
+data_test  = pd.DataFrame(data_test,  columns=df_test.columns,  index=df_test.index)
 
+# ── PRECIP COLUMNS ──────────────────────────────────
 precip_cols = [col for col in df_pivot.columns if col.startswith("precip_")]
 num_stations = len(precip_cols)
+x_train, y_train = [], []
 
-for i in range(HIST_LEN, len(data_scaled) - HORIZON):
-    x_window = data_scaled.iloc[i - HIST_LEN:i].values
-    y_window = df_pivot.iloc[i][precip_cols].values  # unscaled precip for all stations
+for i in range(HIST_LEN, len(data_train) - HORIZON):
+    x_window = data_train.iloc[i - HIST_LEN:i].values
+    y_window = df_train.iloc[i+HORIZON][precip_cols].values  # unscaled
 
     total_future_rain = np.sum(y_window)
 
-    # Optional undersampling
     if total_future_rain == 0 and np.random.rand() > 0.1:
         continue
 
-    x.append(x_window)
-    y.append(y_window)
+    x_train.append(x_window)
+    y_train.append(np.log1p(y_window))
 
-x = np.array(x)  
-y = np.array(y)  
-y = np.log1p(y)  
+x_train = np.array(x_train)
+y_train = np.array(y_train)
 
-# ── SPLIT ─────────────────────────────────
-split_idx = int(SPLIT_FRACTION * len(x))
-x_train, x_val = x[:split_idx], x[split_idx:]
-y_train, y_val = y[:split_idx], y[split_idx:]
+x_val, y_val = [], []
+for i in range(HIST_LEN, len(data_val) - HORIZON):
+    x_window = data_val.iloc[i - HIST_LEN:i].values
+    y_window = df_val.iloc[i + HORIZON][precip_cols].values
+    x_val.append(x_window)
+    y_val.append(np.log1p(y_window))
+
+x_val = np.array(x_val)
+y_val = np.array(y_val)
+
+x_test, y_test = [], []
+for i in range(HIST_LEN, len(data_test) - HORIZON):
+    x_window = data_test.iloc[i - HIST_LEN:i].values
+    y_window = df_test.iloc[i + HORIZON][precip_cols].values
+    x_test.append(x_window)
+    y_test.append(np.log1p(y_window))
+
+x_test = np.array(x_test)
+y_test = np.array(y_test) 
 
 # ── MODEL ─────────────────────────────────
 input_shape = x_train.shape[1:] 
