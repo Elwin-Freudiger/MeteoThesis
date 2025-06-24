@@ -18,7 +18,7 @@ WEATHER_CSV = "../data/clean/valais_clean.csv"
 STATIONS_CSV = "../data/clean/valais_stations.csv"
 
 HIST_LEN = 36      # 6 hours history @ 10-minute freq
-HORIZON = 6        # predict 1 hour ahead (6 * 10 minutes)
+HORIZON = 1        # predict 1 hour ahead (6 * 10 minutes)
 BATCH_SIZE = 256
 EPOCHS = 10
 SPLIT_FRACTION = 0.8
@@ -120,4 +120,3 @@ print(f"Mean Squared Error: {mse:.4f}")
 print(f"Mean Absolute Error: {mae:.4f}")
 
 model.save("../model_testing/forecast_lstm__kan_balanced.keras")
-

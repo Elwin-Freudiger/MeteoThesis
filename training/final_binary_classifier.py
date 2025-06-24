@@ -13,7 +13,7 @@ WEATHER_CSV = "../data/clean/valais_clean.csv"
 STATIONS_CSV = "../data/clean/valais_stations.csv"
 
 HIST_LEN = 36     # 6 hours history
-HORIZON = 6       # 6 hour ahead
+HORIZON = 1       # 6 hour ahead
 BATCH_SIZE = 256
 EPOCHS = 10
 SPLIT_FRACTION = 0.8
@@ -147,4 +147,4 @@ y_pred_binary = (y_pred > 0.5).astype(int)
 from sklearn.metrics import classification_report
 print(classification_report(y_val.flatten(), y_pred_binary.flatten(), digits=3))
 
-model.save("../model_testing/forecast_binary_6.keras")
+model.save("../model_testing/forecast_binary_1.keras")

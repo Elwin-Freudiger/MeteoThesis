@@ -16,3 +16,6 @@ tests/
 
 #Neural forecast package
 neuralforecast/.venv
+
+#Model saves
+model_testing/

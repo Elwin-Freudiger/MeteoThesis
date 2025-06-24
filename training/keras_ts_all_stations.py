@@ -6,6 +6,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
 from keras_efficient_kan import KANLinear
+import keras
 from tqdm import tqdm
 
 # ── CONFIG ────────────────────────────────
@@ -13,11 +14,14 @@ WEATHER_CSV = "../data/clean/valais_clean.csv"
 STATIONS_CSV = "../data/clean/valais_stations.csv"
 
 HIST_LEN = 36     # 6 hours history
-HORIZON = 6       # 1 hour ahead
+HORIZON = 1       # 1 hour ahead
 BATCH_SIZE = 256
 EPOCHS = 10
 SPLIT_FRACTION = 0.8
 LEARNING_RATE = 0.0001
+
+# ── LOAD MODEL ─────────────────────────────
+model_binary = keras.models.load_model('../model_testing/forecast_binary_6.keras')
 
 # ── LOAD DATA ─────────────────────────────
 df_weather = pd.read_csv(WEATHER_CSV)
@@ -67,7 +71,7 @@ for i in range(HIST_LEN, len(data_train) - HORIZON):
 
     total_future_rain = np.sum(y_window)
 
-    if total_future_rain == 0 and np.random.rand() > 0.1:
+    if total_future_rain == 0:
         continue
 
     x_train.append(x_window)
@@ -110,7 +114,8 @@ x = KANLinear(32)(x)
 x = KANLinear(16)(x)
 
 x = layers.Flatten()(x)
-output = KANLinear(num_stations)(x)
+output = layers.Dense(1)(x) 
+
 
 model = Model(inputs=ts_input, outputs=output)
 model.compile(optimizer=Adam(learning_rate=LEARNING_RATE), loss='mse', metrics=['mae'])
