@@ -13,7 +13,7 @@ WEATHER_CSV = "../data/clean/valais_clean.csv"
 STATIONS_CSV = "../data/clean/valais_stations.csv"
 
 HIST_LEN = 36     # 6 hours history
-HORIZON = 1       # 6 hour ahead
+HORIZON = 1       # 10 minutes ahead
 BATCH_SIZE = 256
 EPOCHS = 10
 SPLIT_FRACTION = 0.8
