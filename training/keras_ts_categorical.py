@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.utils import to_categorical
 from tensorflow.keras import layers, Input, Model
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
@@ -21,9 +22,14 @@ df_weather["time"] = pd.to_datetime(df_weather["time"], format="%Y%m%d%H%M")
 df_stations = pd.read_csv(STATIONS_CSV)
 df = df_weather.merge(df_stations[["station", "east", "north", "altitude"]], on="station", how="left")
 
+
+station_list = sorted(df["station"].unique())
+station_to_index = {s: i for i, s in enumerate(station_list)}
+num_stations = len(station_list)
+
 # ── FEATURE ENGINEERING ────────────────────
-selected_features = ['precip', 'temperature', 'East', 'North', 'pressure', 'moisture']
-metadata_features = ['east', 'north', 'altitude']
+selected_features = ['precip', 'temperature', 'pressure', 'moisture']
+metadata_features = ['altitude']
 
 all_features = selected_features + metadata_features
 # ── PIVOT TO WIDE FORMAT ───────────────────
@@ -46,22 +52,34 @@ df_val_scaled = pd.DataFrame(scaler.transform(df_val), columns=df_val.columns, i
 # ── BUILD SAMPLES ──────────────────────────
 def build_samples(df_src, df_target, station_list, undersample):
     x, y = [], []
+    station_ids = [] 
+
     for station in station_list:
         col_name = f"precip_{station}"
+        station_index = station_to_index[station]
+        one_hot = to_categorical(station_index, num_classes=num_stations)
+
         for i in range(HIST_LEN, len(df_src) - HORIZON):
             y_val = df_target.iloc[i + HORIZON][col_name]
             if y_val <= 0:
                 continue
             if undersample and np.random.rand() > 0.4:
                 continue
-            x_window = df_src.iloc[i - HIST_LEN:i].values
-            x.append(x_window)
-            y.append(np.log1p(y_val))
-    return np.array(x), np.array(y)
 
-station_list = df["station"].unique()
-x_train, y_train = build_samples(df_train_scaled, df_train, station_list, undersample=True)
-x_val, y_val = build_samples(df_val_scaled, df_val, station_list, undersample=True)
+            x_window = df_src.iloc[i - HIST_LEN:i].values
+            # Repeat one-hot encoding across HIST_LEN timesteps
+            one_hot_repeated = np.tile(one_hot, (HIST_LEN, 1))
+            # Concatenate
+            x_window_augmented = np.concatenate([x_window, one_hot_repeated], axis=1)
+
+            x.append(x_window_augmented)
+            y.append(np.log1p(y_val))
+            station_ids.append(station_index)
+
+    return np.array(x), np.array(y), np.array(station_ids)
+
+x_train, y_train, _ = build_samples(df_train_scaled, df_train, station_list, undersample=True)
+x_val, y_val, _ = build_samples(df_val_scaled, df_val, station_list, undersample=True)
 
 # ── MODEL ──────────────────────────────────
 ts_input = Input(shape=x_train.shape[1:])
