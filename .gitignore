@@ -19,3 +19,10 @@ neuralforecast/.venv
 
 #Model saves
 model_testing/
+
+
+#R files
+.Rhistory
+
+#neuralforecast env
+neuralforecast/
