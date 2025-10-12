@@ -26,3 +26,6 @@ model_testing/
 
 #neuralforecast env
 neuralforecast/
+
+#lightning logs
+lightning_logs/
