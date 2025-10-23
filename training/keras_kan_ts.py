@@ -17,8 +17,8 @@ from sklearn.preprocessing import StandardScaler
 WEATHER_CSV = "../data/clean/valais_clean.csv"
 STATIONS_CSV = "../data/clean/valais_stations.csv"
 
-HIST_LEN = 36      # 6 hours history @ 10-minute freq
-HORIZON = 1        # predict 1 hour ahead (6 * 10 minutes)
+HIST_LEN = 36     
+HORIZON = 1      
 BATCH_SIZE = 256
 EPOCHS = 10
 SPLIT_FRACTION = 0.8
@@ -44,20 +44,18 @@ features = pd.DataFrame(features_scaled, index=features.index, columns=selected_
 
 x, y = [], []
 
-# Store all precip values separately to compute total rain in horizon
-precip_series = df["precip"].values  # unscaled!
+precip_series = df["precip"].values 
 
 for i in range(HIST_LEN, len(features) - HORIZON):
     x_window = features.iloc[i - HIST_LEN:i].values
-    y_window = precip_series[i:i + HORIZON]  # raw precip horizon
+    y_window = precip_series[i:i + HORIZON]  
     
     total_future_rain = np.sum(y_window)
     
-    # Retain all rainy examples, but keep only a subset of dry ones
     if total_future_rain == 0:
-        if np.random.rand() < 0.2:  # Keep 20% of dry samples
+        if np.random.rand() < 0.2: 
             x.append(x_window)
-            y.append(y_window[-1])  # still forecast last value or mean etc.
+            y.append(y_window[-1])  
     else:
         x.append(x_window)
         y.append(y_window[-1])
@@ -80,7 +78,7 @@ x = layers.LSTM(32)(x)
 x = layers.Dropout(0.3)(x)
 
 # ── KAN-LINEAR BLOCK ────────────────────────────────
-x = layers.Reshape((1, 32))(x)  # reshape for KANLinear compatibility
+x = layers.Reshape((1, 32))(x)  
 x = KANLinear(32)(x)
 x = KANLinear(16)(x)
 
@@ -97,7 +95,6 @@ model.compile(
 )
 model.summary()
 
-# ── TRAINING ────────────────────────────────────────
 model.fit(
     x_train, y_train,
     epochs=EPOCHS,
@@ -110,9 +107,8 @@ model.fit(
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay
 
-y_pred = model.predict(x_val).flatten()  # or x_test if you have separate test set
+y_pred = model.predict(x_val).flatten() 
 
-# ── EVALUATE REGRESSION METRICS ───────────────────────────
 mse = mean_squared_error(y_val, y_pred)
 mae = mean_absolute_error(y_val, y_pred)
 

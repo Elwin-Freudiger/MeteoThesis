@@ -13,8 +13,9 @@ from tqdm import tqdm
 WEATHER_CSV = "../data/clean/valais_clean.csv"
 STATIONS_CSV = "../data/clean/valais_stations.csv"
 
-HIST_LEN = 36     # 6 hours history
-HORIZON = 1       # 1 hour ahead
+#6 hour history and 1 hour ahead
+HIST_LEN = 36     
+HORIZON = 1      
 BATCH_SIZE = 256
 EPOCHS = 10
 SPLIT_FRACTION = 0.8
@@ -30,7 +31,6 @@ df_weather["time"] = pd.to_datetime(df_weather["time"], format="%Y%m%d%H%M")
 df_stations = pd.read_csv(STATIONS_CSV)
 df = df_weather.merge(df_stations[["station", "east", "north", "altitude"]], on="station", how="left")
 
-# ── BUILD WIDE FORMAT ─────────────────────
 selected_features = ['precip', 'temperature', 'East', 'North', 'pressure', 'moisture']
 metadata_features = ['east', 'north', 'altitude']
 
@@ -43,9 +43,8 @@ df_pivot = df_pivot.sort_index()
 df_pivot = df_pivot.dropna()  
 
 
-# ── SPLITTING RAW TIME INDEX ─────────────────────────
-split1 = int(0.6 * len(df_pivot))  # train
-split2 = int(0.8 * len(df_pivot))  # val
+split1 = int(0.6 * len(df_pivot))  
+split2 = int(0.8 * len(df_pivot))  
 df_train = df_pivot.iloc[:split1]
 df_val   = df_pivot.iloc[split1:split2]
 df_test  = df_pivot.iloc[split2:]

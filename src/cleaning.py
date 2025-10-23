@@ -4,6 +4,11 @@ import os
 import re
 from tqdm import tqdm
 
+"""
+This script processes raw weather station data, extracting the data itself and saving it to a csv.
+"""
+
+
 #return a list of files matching the pattern
 def get_text_files(pattern):
     return glob.glob(pattern)

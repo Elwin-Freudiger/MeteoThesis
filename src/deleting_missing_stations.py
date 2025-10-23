@@ -3,6 +3,9 @@ from itertools import repeat
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 
+"""
+This script removes selected stations which are unreliable.
+"""
 
 def take_away(var, lame_stations, station_list):
     df = pd.read_csv(f"data/processed/{var}.csv")    

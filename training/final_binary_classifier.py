@@ -8,12 +8,11 @@ from tensorflow.keras.optimizers import Adam
 from keras_efficient_kan import KANLinear
 from tqdm import tqdm
 
-# ── CONFIG ────────────────────────────────
 WEATHER_CSV = "../data/clean/valais_clean.csv"
 STATIONS_CSV = "../data/clean/valais_stations.csv"
 
-HIST_LEN = 36     # 6 hours history
-HORIZON = 1       # 10 minutes ahead
+HIST_LEN = 36     
+HORIZON = 1       
 BATCH_SIZE = 256
 EPOCHS = 10
 SPLIT_FRACTION = 0.8
@@ -41,7 +40,6 @@ df_pivot.columns = [f"{feat}_{station}" for feat, station in df_pivot.columns]
 df_pivot = df_pivot.sort_index()
 df_pivot = df_pivot.dropna()  
 
-
 # ── SPLITTING ───────────────────────────────
 split1 = int(0.6 * len(df_pivot))
 split2 = int(0.8 * len(df_pivot))
@@ -55,12 +53,9 @@ data_train = scaler.fit_transform(df_train)
 data_val   = scaler.transform(df_val)
 data_test  = scaler.transform(df_test)
 
-# ── SAMPLE CONSTRUCTION ───────────────────
-# ── SETUP ──────────────────────────────────
 precip_cols = [col for col in df_pivot.columns if col.startswith("precip_")]
 num_stations = len(precip_cols)
 
-# ── TRAIN SET CONSTRUCTION (undersampled) ─
 x_train, y_train = [], []
 train_scaled = pd.DataFrame(data_train, columns=df_train.columns, index=df_train.index)
 
@@ -76,7 +71,6 @@ for i in range(HIST_LEN, len(train_scaled) - HORIZON):
     x_train.append(x_window)
     y_train.append(y_window)
 
-# ── VALIDATION SET CONSTRUCTION (no undersampling) ─
 x_val, y_val = [], []
 val_scaled = pd.DataFrame(data_val, columns=df_val.columns, index=df_val.index)
 
@@ -88,7 +82,6 @@ for i in range(HIST_LEN, len(val_scaled) - HORIZON):
     x_val.append(x_window)
     y_val.append(y_window)
 
-# ── TEST SET CONSTRUCTION (no undersampling) ─
 x_test, y_test = [], []
 test_scaled = pd.DataFrame(data_test, columns=df_test.columns, index=df_test.index)
 
