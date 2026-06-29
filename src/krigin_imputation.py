@@ -60,6 +60,38 @@ def ked_interpolation_gstools(known_points, unknown_points):
 
     return predictions
 
+def ordinarykrig_interpolation_gstools(known_points, unknown_points):
+    """
+    Perform ordinary kriging with a custom variogram model fit for each run.
+    """
+    x_known, y_known, z_known = known_points[:, 0], known_points[:, 1], known_points[:, 2]
+    values = known_points[:, 3]
+    x_unknown, y_unknown, z_unknown = unknown_points[:, 0], unknown_points[:, 1], unknown_points[:, 2]
+    if np.all(values == 0):
+        return np.zeros(len(unknown_points))
+
+    bin_center, gamma = gs.vario_estimate(
+        (x_known, y_known),
+        values,
+        bin_edges=np.linspace(0, 100000, 15)
+    )
+
+    model = gs.Exponential(dim=2)
+    model.fit_variogram(bin_center, gamma)
+
+    ked = gs.krige.Ordinary(
+        model=model,
+        cond_pos=(x_known, y_known),
+        cond_val=values,
+    )
+
+    predictions, _ = ked(
+        (x_unknown, y_unknown),
+        return_var=True
+    )
+
+    return predictions
+
 def ked_interpolation_gstools_fixed(known_points, unknown_points):
     """
     Kriging with External Drift using a fixed variogram model.

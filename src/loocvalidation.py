@@ -1,141 +1,445 @@
-import pandas as pd
-import numpy as np
 import os
+import numpy as np
+import pandas as pd
 import gstools as gs
+
 from tqdm.contrib.concurrent import process_map
 from krigin_imputation import ked_interpolation_gstools
 
-def _process_timestamp(args):
-    timestamp, df, var, drift = args
-    errors = []
-    preds = []
-    trues = []
-    subset = df[df['time'] == timestamp]
+
+# ============================================================
+# Utility helpers
+# ============================================================
+
+def _prepare_df(df, time_col="time"):
+    df = df.copy()
+    if not np.issubdtype(df[time_col].dtype, np.datetime64):
+        df[time_col] = pd.to_datetime(df[time_col], format="%Y%m%d%H%M")
+    return df
+
+
+def _safe_error(true_value, pred, rounding_digits=1):
+    if pred is None or pd.isna(pred):
+        return None
+
+    pred_eval = round(float(pred), rounding_digits) if rounding_digits is not None else float(pred)
+    return float(true_value) - pred_eval
+
+
+def _metrics_from_records(records):
+    if not records:
+        return {
+            "n": 0,
+            "mae": np.nan,
+            "rmse": np.nan,
+            "bias": np.nan,
+        }
+
+    errors = np.array([r["error"] for r in records], dtype=float)
+
+    return {
+        "n": len(errors),
+        "mae": float(np.mean(np.abs(errors))),
+        "rmse": float(np.sqrt(np.mean(errors ** 2))),
+        "bias": float(np.mean(errors)),
+    }
+
+
+def _estimate_len_scale(coords):
+    """
+    Simple robust default for ordinary kriging.
+    Uses median pairwise distance between stations.
+    """
+    coords = np.asarray(coords, dtype=float)
+
+    if len(coords) < 2:
+        return 1.0
+
+    diff = coords[:, None, :] - coords[None, :, :]
+    dists = np.sqrt(np.sum(diff ** 2, axis=2))
+    positive = dists[dists > 0]
+
+    if len(positive) == 0:
+        return 1.0
+
+    return float(np.median(positive))
+
+# ============================================================
+# Prediction functions
+# ============================================================
+
+def predict_ked(train_set, test_point, var, drift="altitude"):
+    """
+    Kriging with external drift using your existing function.
+
+    Expected known_points columns:
+    east, north, drift, var
+
+    Expected unknown_points columns:
+    east, north, drift
+    """
+    known_points = train_set[["east", "north", drift, var]].values
+    unknown_points = test_point[["east", "north", drift]].values.reshape(1, -1)
+
+    pred = ked_interpolation_gstools(known_points, unknown_points)[0]
+    return float(pred)
+
+def predict_ordinary_kriging(
+    train_set,
+    test_point,
+    var,
+    model_cls=gs.Exponential,
+    len_scale=None,
+):
+    """
+    Ordinary kriging without external drift.
+
+    Uses only:
+    east, north, var
+    """
+    coords = train_set[["east", "north"]].to_numpy(dtype=float)
+    values = train_set[var].to_numpy(dtype=float)
+
+    if len(values) < 2:
+        return np.nan
+
+    value_var = float(np.nanvar(values))
+    if value_var <= 0 or np.isnan(value_var):
+        # If all training values are identical, kriging is unnecessary.
+        return float(np.nanmean(values))
+
+    if len_scale is None:
+        len_scale = _estimate_len_scale(coords)
+
+    model = model_cls(
+        dim=2,
+        var=value_var,
+        len_scale=len_scale,
+    )
+
+    ok = gs.krige.Ordinary(
+        model,
+        cond_pos=[coords[:, 0], coords[:, 1]],
+        cond_val=values,
+    )
+
+    x0 = np.array([float(test_point["east"])])
+    y0 = np.array([float(test_point["north"])])
+
+    pred = ok((x0, y0), return_var=False)
+
+    # GSTools can return slightly different shapes depending on version.
+    pred = np.asarray(pred).ravel()[0]
+    return float(pred)
+
+def predict_closest_station(train_set, test_point, var):
+    """
+    Closest station interpolation for one timestamp.
+
+    Uses horizontal distance in east/north coordinates.
+    """
+    coords = train_set[["east", "north"]].to_numpy(dtype=float)
+    values = train_set[var].to_numpy(dtype=float)
+
+    x0 = float(test_point["east"])
+    y0 = float(test_point["north"])
+
+    dists = np.sqrt((coords[:, 0] - x0) ** 2 + (coords[:, 1] - y0) ** 2)
+    idx = int(np.argmin(dists))
+
+    return float(values[idx])
+
+
+def predict_forward_fill(df_all, test_point, var):
+    """
+    Forward fill prediction for the held-out station and timestamp.
+
+    Uses the previous available value from the same station.
+    Does not use the current hidden value.
+    """
+    station = test_point["station"]
+    timestamp = test_point["time"]
+
+    hist = df_all[
+        (df_all["station"] == station)
+        & (df_all["time"] < timestamp)
+        & (~df_all[var].isna())
+    ].sort_values("time")
+
+    if hist.empty:
+        return np.nan
+
+    return float(hist.iloc[-1][var])
+
+
+def predict_backward_fill(df_all, test_point, var):
+    """
+    Backward fill prediction for the held-out station and timestamp.
+
+    Uses the next available value from the same station.
+    Does not use the current hidden value.
+    """
+    station = test_point["station"]
+    timestamp = test_point["time"]
+
+    future = df_all[
+        (df_all["station"] == station)
+        & (df_all["time"] > timestamp)
+        & (~df_all[var].isna())
+    ].sort_values("time")
+
+    if future.empty:
+        return np.nan
+
+    return float(future.iloc[0][var])
+
+
+# ============================================================
+# LOOCV worker
+# ============================================================
+
+def _process_timestamp_all_methods(args):
+    timestamp, df, var, drift, rounding_digits = args
+
+    records = {
+        "ked": [],
+        "ordinary_kriging": [],
+        "forward_fill": [],
+        "backward_fill": [],
+        "closest_station": [],
+    }
+
+    subset = df[df["time"] == timestamp].copy()
     subset = subset[~subset[var].isna()]
+
     if len(subset) < 2:
-        return errors, preds, trues
+        return records
 
     for i in range(len(subset)):
         test_point = subset.iloc[i]
         train_set = subset.drop(subset.index[i])
-        known_points = train_set[['east', 'north', drift, var]].values
-        unknown_points = test_point[['east', 'north', drift]].values.reshape(1, -1)
+
+        true_value = test_point[var]
+        station = test_point.get("station", None)
+
+        # ----------------------------
+        # 1. Kriging with external drift
+        # ----------------------------
         try:
-            pred = ked_interpolation_gstools(known_points, unknown_points)[0]
-            true_value = test_point[var]
-            errors.append(true_value - round(pred, 1))
-            preds.append(pred)
-            trues.append(true_value)
+            if drift in train_set.columns and drift in test_point.index:
+                train_ked = train_set.dropna(subset=["east", "north", drift, var])
+                if len(train_ked) >= 2 and not pd.isna(test_point[drift]):
+                    pred = predict_ked(train_ked, test_point, var, drift=drift)
+                    err = _safe_error(true_value, pred, rounding_digits)
+                    if err is not None:
+                        records["ked"].append({
+                            "time": timestamp,
+                            "station": station,
+                            "true": float(true_value),
+                            "pred": float(pred),
+                            "error": err,
+                        })
         except Exception:
-            continue
-    return errors, preds, trues
+            pass
 
-def leave_one_out_kriging(df, var, drift='altitude', n=100, workers=None):
-    df['time'] = pd.to_datetime(df['time'], format='%Y%m%d%H%M')
-    all_timestamps = df['time'].unique()
+        # ----------------------------
+        # 2. Ordinary kriging, no drift
+        # ----------------------------
+        try:
+            train_ok = train_set.dropna(subset=["east", "north", var])
+            if len(train_ok) >= 2:
+                pred = predict_ordinary_kriging(train_ok, test_point, var)
+                err = _safe_error(true_value, pred, rounding_digits)
+                if err is not None:
+                    records["ordinary_kriging"].append({
+                        "time": timestamp,
+                        "station": station,
+                        "true": float(true_value),
+                        "pred": float(pred),
+                        "error": err,
+                    })
+        except Exception:
+            pass
+
+        # ----------------------------
+        # 3. Closest station
+        # ----------------------------
+        try:
+            train_closest = train_set.dropna(subset=["east", "north", var])
+            if len(train_closest) >= 1:
+                pred = predict_closest_station(train_closest, test_point, var)
+                err = _safe_error(true_value, pred, rounding_digits)
+                if err is not None:
+                    records["closest_station"].append({
+                        "time": timestamp,
+                        "station": station,
+                        "true": float(true_value),
+                        "pred": float(pred),
+                        "error": err,
+                    })
+        except Exception:
+            pass
+
+        # ----------------------------
+        # 4. Forward fill
+        # ----------------------------
+        try:
+            pred = predict_forward_fill(df, test_point, var)
+            err = _safe_error(true_value, pred, rounding_digits)
+            if err is not None:
+                records["forward_fill"].append({
+                    "time": timestamp,
+                    "station": station,
+                    "true": float(true_value),
+                    "pred": float(pred),
+                    "error": err,
+                })
+        except Exception:
+            pass
+
+        # ----------------------------
+        # 5. Backward fill
+        # ----------------------------
+        try:
+            pred = predict_backward_fill(df, test_point, var)
+            err = _safe_error(true_value, pred, rounding_digits)
+            if err is not None:
+                records["backward_fill"].append({
+                    "time": timestamp,
+                    "station": station,
+                    "true": float(true_value),
+                    "pred": float(pred),
+                    "error": err,
+                })
+        except Exception:
+            pass
+
+    return records
+
+
+# ============================================================
+# Main comparison function
+# ============================================================
+
+def compare_interpolation_methods(
+    df,
+    var,
+    drift="altitude",
+    n=100,
+    workers=None,
+    random_state=42,
+    rounding_digits=1,
+):
+    """
+    Runs LOOCV comparison for:
+
+    - kriging with external drift
+    - ordinary kriging without drift
+    - forward fill
+    - backward fill
+    - closest station
+
+    Returns:
+    metrics_df, records_df
+    """
+    df = _prepare_df(df)
+
+    required = {"time", "station", "east", "north", var}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+
+    if drift not in df.columns:
+        raise ValueError(f"Drift column '{drift}' not found in dataframe.")
+
+    all_timestamps = df["time"].dropna().unique()
+
     if len(all_timestamps) < n:
-        raise ValueError(f"Not enough timestamps: requested {n}, available {len(all_timestamps)}")
-    selected_timestamps = np.random.choice(all_timestamps, size=n, replace=False)
+        raise ValueError(
+            f"Not enough timestamps: requested {n}, available {len(all_timestamps)}"
+        )
 
-    args_list = [(ts, df, var, drift) for ts in selected_timestamps]
+    rng = np.random.default_rng(random_state)
+    selected_timestamps = rng.choice(all_timestamps, size=n, replace=False)
+
+    args_list = [
+        (ts, df, var, drift, rounding_digits)
+        for ts in selected_timestamps
+    ]
 
     if workers is None:
         workers = os.cpu_count() or 1
 
     results = process_map(
-        _process_timestamp,
+        _process_timestamp_all_methods,
         args_list,
         max_workers=workers,
-        desc=f"Processing {var}"
+        desc=f"Comparing interpolation methods for {var}",
     )
 
-    # Flatten results
-    errors = [e for r in results for e in r[0]]
-    preds = [p for r in results for p in r[1]]
-    trues = [t for r in results for t in r[2]]
+    # Flatten records
+    all_records = []
+    by_method = {
+        "ked": [],
+        "ordinary_kriging": [],
+        "forward_fill": [],
+        "backward_fill": [],
+        "closest_station": [],
+    }
 
-    mae = np.mean(np.abs(errors)) if errors else np.nan
-    rmse = np.sqrt(np.mean(np.square(errors))) if errors else np.nan
+    for result in results:
+        for method, method_records in result.items():
+            by_method[method].extend(method_records)
 
-    return mae, rmse, preds, trues
+            for r in method_records:
+                row = r.copy()
+                row["method"] = method
+                all_records.append(row)
 
-def _process_closest(args):
-    timestamp, df, var = args
-    errors = []
-    subset = df[df['time'] == timestamp]
-    subset = subset[~subset[var].isna()]
-    if len(subset) < 2:
-        return errors
-    
-    # Interpolate with closest k station for this timestamp
-    for i in range(len(subset)):
-        test_point = subset.iloc[i]
-        train_set = subset.drop(subset.index[i])
-        known_points = train_set[['east', 'north', 'altitude', var]].values
-        unknown_points = test_point[['east', 'north', 'altitude']].values.reshape(1, -1)
-        try:
-            
-            pred = ked_interpolation_gstools(known_points, unknown_points)[0]
-            true_value = test_point[var]
-            errors.append(true_value - round(pred, 1))
-        except Exception as e:
-            # Skip errors for this point
-            continue
-    return errors
+    metrics_rows = []
 
-def main_wind():
-    drift = 'average_wind'
-    df = pd.read_csv('data/filtered/merged_valais.csv')
-    df['time'] = pd.to_datetime(df['time'], format='%Y%m%d%H%M')
+    for method, method_records in by_method.items():
+        metrics = _metrics_from_records(method_records)
+        metrics_rows.append({
+            "method": method,
+            "n": metrics["n"],
+            "mae": metrics["mae"],
+            "rmse": metrics["rmse"],
+            "bias": metrics["bias"],
+        })
 
-    # 1. LOOCV for speed directly
-    print("==> LOOCV for speed (magnitude)")
-    df['speed'] = np.sqrt(df['East']**2 + df['North']**2)
-    mae_speed, rmse_speed, _, _ = leave_one_out_kriging(df, var='speed', drift=drift, n=10)
+    metrics_df = pd.DataFrame(metrics_rows).sort_values("mae")
+    records_df = pd.DataFrame(all_records)
 
-    # 2. LOOCV for East and North separately
-    print("==> LOOCV for East component")
-    mae_east, rmse_east, pred_east, true_east = leave_one_out_kriging(df, var='East', drift=drift, n=10)
-
-    print("==> LOOCV for North component")
-    mae_north, rmse_north, pred_north, true_north = leave_one_out_kriging(df, var='North', drift=drift, n=10)
-
-    # 3. Reconstructed speed
-    if pred_east and pred_north:
-        reconstructed_speed = np.sqrt(np.array(pred_east)**2 + np.array(pred_north)**2)
-        true_speed = np.sqrt(np.array(true_east)**2 + np.array(true_north)**2)
-        speed_errors = true_speed - reconstructed_speed
-        mae_vec = np.mean(np.abs(speed_errors))
-        rmse_vec = np.sqrt(np.mean(speed_errors**2))
-    else:
-        mae_vec = rmse_vec = np.nan
-
-    # 4. Print comparison
-    print("\n===== RESULTS =====")
-    print(f"Speed (direct):      MAE = {mae_speed:.3f}, RMSE = {rmse_speed:.3f}")
-    print(f"East  (component):   MAE = {mae_east:.3f}, RMSE = {rmse_east:.3f}")
-    print(f"North (component):   MAE = {mae_north:.3f}, RMSE = {rmse_north:.3f}")
-    print(f"Speed (recombined):  MAE = {mae_vec:.3f}, RMSE = {rmse_vec:.3f}")
+    return metrics_df, records_df
 
 def main():
-    var = 'North'
-    drift = 'altitude'
-    df = pd.read_csv('data/filtered/merged_valais.csv')
 
-    mae, rmse, _, _ = leave_one_out_kriging(df, var=var, drift=drift, n=5)
-    print(f"For {var} using drift '{drift}', MAE: {mae:.3f}, RMSE: {rmse:.3f}")
+    vars = {'precip':'altitude',
+            'moisture':'altitude',
+            'pression':'altitude',
+            'temperature':'altitude',
+            'North':'wind_speed',
+            'East':'wind_speed'}
+    
+    stations_info = pd.read_csv("../data/clean/stations_with_wind_speed.csv")
+    stations_info = stations_info[['station', 'wind_speed']]
+    df = pd.read_csv("../data/filtered/merged_valais.csv")
+    df = df.merge(right=stations_info, how='left', on='station')
 
+    for var in vars:
+        metrics_df, records_df = compare_interpolation_methods(
+            df=df,
+            var=var,
+            drift=vars[var],
+            n=50,
+            workers=None,
+            random_state=42,
+            rounding_digits=1,
+        )
 
-def main_humidity():
-    var = 'East'
-    drift = 'temp_drift'
-    df = pd.read_csv('data/filtered/merged_valais.csv')
-    df_temp = pd.read_csv('data/clean/valais_clean.csv')
-    df_temp['temp_drift'] = df_temp['temperature']
-    df = df.merge(df_temp[['station', 'time', 'temp_drift']], on=['station', 'time'], how='left')
-
-    mae, rmse, _, _ = leave_one_out_kriging(df, var=var, drift=drift, n=5)
-    print(f"For {var} using drift '{drift}', MAE: {mae:.3f}, RMSE: {rmse:.3f}")
+        print(f"\n===== COMPARISON RESULTS: {var} =====")
+        print(metrics_df.to_string(index=False))
 
 if __name__ == "__main__":
     main()
